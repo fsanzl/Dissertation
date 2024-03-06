@@ -1,6 +1,8 @@
 # Introduction
 This repository contains the source files of my PhD thesis 'Ritmo y estructura de la comedia áurea: posibilidades y límites del análisis digital automático del teatro español clásico'. It fulfils the [formal requisites of the University of Vienna](https://lehre-schmelz.univie.ac.at/waehrend-des-studiums/abschlussarbeiten/). The source code is intended to be compiled with [XeLaTeX](https://tug.org/xetex/) and [Biber](https://www.ctan.org/pkg/biber).
 
+The thesis is written in Spanish, but it also includes text in English, German, and Latin, as well as characters and diacritics of the International Phonetic Alphabet.  
+
 # Structure
 The master document, chapters and bibliography are in the ```thesis``` directory. The directory ```thesis/figures``` contains LaTeX code to draw figures, the directory ```thesis/images``` contains binary pictures, the directory ```thesis/tables``` contains LaTeX code for tables, and the directory ```thesis/src``` contains the Python code included in the appendices.
 
