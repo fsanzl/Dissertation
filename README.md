@@ -4,12 +4,21 @@ This repository contains the source files of my PhD thesis 'Ritmo y estructura d
 The thesis is written in Spanish, but it also includes text in English, German, and Latin, as well as characters and diacritics of the International Phonetic Alphabet.  
 
 # Structure
-The master document, chapters and bibliography are in the ```thesis``` directory. The directory ```thesis/figures``` contains LaTeX code to draw figures, the directory ```thesis/images``` contains binary pictures, the directory ```thesis/tables``` contains LaTeX code for tables, and the directory ```thesis/src``` contains the Python code included in the appendices.
+The master document, chapters and bibliography are in the ```thesis``` directory. The directory ```thesis/figures``` contains LaTeX code to draw figures, the directory ```thesis/images``` contains binary pictures, and the directory ```thesis/tables``` contains LaTeX code for tables. The directory ```thesis/src``` contains empty dummy files in the place of Python scripts as they were symlinks. Those scripts are available in their respectives repositories (see below).
 
+## Included scripts
+
+The sctipts listed in the appendix can be found here.
+- [libEscansión](https://github.com/fsanzl/libEscansion)
+- [Fonemas](https://github.com/fsanzl/fonemas)
+- [Silabeador](https://github.com/fsanzl/silabeador)
+- [txt2tei](https://github.com/fsanzl/txt2tei)
+
+ 
 # Compilation
 
 ```bash
-$ xelatex main && biber main && xelatex main && xelatex main
+$ xelatex main && biber main && xelatex main
 ```
 
 # About the dissertation
@@ -34,11 +43,3 @@ The thesis was defended at the [Department of Romance Studies](https://romanisti
 ### APA
 
 Sanz-Lázaro, F. (2024). *Ritmo y estructura de la comedia áurea: posibilidades y límites del análisis digital automático del teatro español clásico* [Doctoral dissertation, University of Vienna]. PHAIDRA. <https://hdl.handle.net/11353/10.1678196>
-
-# Related work
-
-Please check my other repos containing the practical application of the thesis:
-- [libEscansión](https://github.com/fsanzl/libEscansion)
-- [Fonemas](https://github.com/fsanzl/fonemas)
-- [Silabeador](https://github.com/fsanzl/silabeador)
-- [txt2tei](https://github.com/fsanzl/txt2tei)
