@@ -1,10 +1,11 @@
 # Introduction
 This repository contains the source files of my PhD thesis 'Ritmo y estructura de la comedia áurea: posibilidades y límites del análisis digital automático del teatro español clásico'. It fulfils the [formal requisites of the University of Vienna](https://lehre-schmelz.univie.ac.at/waehrend-des-studiums/abschlussarbeiten/). The source code is intended to be compiled with [XeLaTeX](https://tug.org/xetex/) and [Biber](https://www.ctan.org/pkg/biber).
 
-The thesis is written in Spanish, but it also includes text in English, German, and Latin, as well as characters and diacritics of the International Phonetic Alphabet.  
+The thesis is written in Spanish, but it also includes text in English, German, Greek, and Latin, as well as characters and diacritics of the International Phonetic Alphabet (and some other). Any character with Unicode representation is typed as-is in the source code rather than calling a function. Therefore, using a font with extensive Unicode support such as Fira Code is highly recommended. 
+
 
 # Structure
-The master document, chapters and bibliography are in the ```thesis``` directory. The directory ```thesis/figures``` contains LaTeX code to draw figures, the directory ```thesis/images``` contains binary pictures, and the directory ```thesis/tables``` contains LaTeX code for tables. The directory ```thesis/src``` contains empty dummy files in the place of Python scripts as they were symlinks. Those scripts are available in their respectives repositories (see below).
+The master document, chapters and bibliography are in the ```thesis``` directory. The directory ```thesis/figures``` contains LaTeX code to draw figures, the directory ```thesis/images``` contains binary pictures, and the directory ```thesis/tables``` contains LaTeX code for tables. The directory ```thesis/src``` contains empty dummy files in the place of Python scripts as they were symlinks. The real scripts are available in their respectives repositories (see below).
 
 ## Included scripts
 
