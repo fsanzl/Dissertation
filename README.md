@@ -22,7 +22,7 @@ $ xelatex main && biber main && xelatex main
 ```
 
 # About the dissertation
-The thesis was defended at the [Department of Romance Studies](https://romanistik.univie.ac.at/) of the University of Vienna on 13 March 2024. It aimed at producing a corpus for the project [Sound and Meaning in Spanish Golden Age Literature](https://doi.org/10.55776/P32563). The published dissertation can be found [here](https://doi.org/10.25365/thesis.75102).
+The PhD thesis composed with this source code was defended at the [Department of Romance Studies](https://romanistik.univie.ac.at/) of the University of Vienna on 13 March 2024. It aimed at producing a corpus for the project [Sound and Meaning in Spanish Golden Age Literature](https://doi.org/10.55776/P32563). The published dissertation can be found [here](https://doi.org/10.25365/thesis.75102).
 
 ## How to cite the dissertation
 ### BibTeX
