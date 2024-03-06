@@ -1,0 +1,18 @@
+\begin{tikzpicture}[font=\footnotesize]
+	\draw[-stealth] (4,0) -- (11.5,0) node[right ,font=\tiny] {$t$};
+       \draw[stealth-] (5,2) node[above ,font=\tiny] {$A$} -- (5,-2);
+  	%\draw[|-|, dashed] (6,0) -- (6,1)  node[midway,left ,font=\tiny] {$A$};
+  	\draw[|-|, dashed] (5,-1) -- (9,-1)  node[midway,below ,font=\tiny] {$\lambda$};
+  	%\draw (0.2,-1)node[left,font=\tiny] {$y=-1$} -- (11.8,-1); 
+  	%foreach \x in {0,0.5,...,12}{
+  	%	\draw (\x,-0.2)node [below,font=\tiny,] {\x} -- (\x,0.2) ;
+  	%}
+  	%\draw[] (3,0) sin (4,1);    %% the real business in this line
+	\draw[lightgray,thick] (4,1) cos (5,0) node[black, below left] {{$p_0$}};    %% the real business in this line
+  	\draw[thick] (5,0) sin (6,-1) node[black, below] {{$p_1$}};    %% the real business in this line
+  	\draw[thick] (6,-1) cos (7,0)  node[black, below right] {{$p_0$}};    %% the real business in this line
+  	\draw[thick] (7,0)  sin (8,1) node[black, above] {{$p_2$}};    %% the real business in this line
+  	\draw[thick] (8,1) cos (9,0) node[black, below right] {{$p_0$}};    %% the real business in this line
+  	\draw[lightgray,thick] (9,0) sin (10,-1);    %% the real business in this line
+  	\draw[lightgray,thick] (10,-1) cos (11,0);    %% the real business in this line
+\end{tikzpicture}

@@ -1,0 +1,283 @@
+\settypeblocksize{260mm}{160mm}{*}
+\setulmarginsandblock{3.5cm}{2.5cm}{*}
+\setheadfoot{\onelineskip}{2\onelineskip}
+\setheaderspaces{2cm}{*}{*}
+
+
+\setlrmarginsandblock{3cm}{2.5cm}{*}
+\checkandfixthelayout
+\OnehalfSpacing
+\NewBibliographyString{organizer}
+\NewBibliographyString{coordinator}
+\NewBibliographyString{director}
+\DefineBibliographyStrings{spanish}{%
+	collaborator =	{colab\adddot},
+	collaborators =	{colabs\adddot},
+	director	=	{dir\adddot}
+	organizer = {coord\adddot},
+	organizers = {coords\adddot},
+	directors	=	{dirs\adddot}
+}
+
+\makeatletter
+\def\invisiblesection#1{%
+	\refstepcounter{section}%
+	\addcontentsline{toc}{section}{\protect\numberline{\thesection}#1}%
+	\sectionmark{#1}\phantom{}
+	\protected@edef\@currentlabelname{#1} % Set correct name
+}
+\makeatother
+
+\renewbibmacro*{apaeditorstrg}[1]{%
+	\iffieldundef{#1type}
+	{\ifthenelse{\value{#1}>1\OR\ifandothers{#1}}
+		{\bibcpstring{editors}}
+		{\bibcpstring{editor}}}
+	{\ifthenelse{\value{#1}>1\OR\ifandothers{#1}}
+		{\ifbibstring{type\thefield{#1type}s}
+			{\bibcpstring{type\thefield{#1type}s}}
+			{\bibcpstring{\thefield{#1type}s}}}
+		{\ifbibstring{type\thefield{#1type}}
+			{\bibcpstring{type\thefield{#1type}}}
+			{\bibcpstring{\thefield{#1type}}}}}}
+
+\newfontfamily\myregularfont{CMU Serif}
+\newfontfamily\DVS{DejaVu Sans}
+\newfontfamily\Arial{Arial}
+\newfontfamily\ipafont{CMU Serif}
+\newfontfamily\sans{CMU Sans Serif}
+\newcommand{\ipa}[1]{{\ipafont\textipa{#1}}}
+
+\newcommand\posscite[1]{\citeauthor{#1}'s (\citeyear{#1})}
+\newcommand{\iindex}[1]{#1\index{#1}} 
+\tikzset{every tree node/.style={font=\itshape}}
+\tikzset{
+	module/.style={%
+		draw, rounded corners,
+		minimum width=#1,
+		minimum height=7mm,
+		align=center
+	},
+	module/.default=2cm,
+	>=LaTeX
+}
+
+\tikzset{
+	datos/.style={%
+		draw,
+		minimum width=#1,
+		minimum height=7mm,
+		tape,
+		tape bend top=none,
+		fill=white,
+		double copy shadow,
+		minimum height=1.5cm,
+		align=center
+	},
+	datos/.default=2cm,
+	>=LaTeX
+}
+
+\tikzset{
+	dato/.style={%
+		draw,
+		minimum width=#1,
+		minimum height=7mm,
+		tape,
+		tape bend top=none,
+		fill=white,
+		align=center
+	},
+	dato/.default=2cm,
+	>=LaTeX
+}
+
+%\colorlet{myblue}{blue!50!black}
+\colorlet{myblue}{black!60}
+\colorlet{myred}{black!60}
+\colorlet{myyellow}{yellow!90!black!60}
+%\colorlet{myred}{red!80!black!60}
+\pgfdeclareverticalshading{rainbow}{100bp}{
+	color(0bp)=(red); color(25bp)=(red); color(35bp)=(yellow);
+	color(45bp)=(green); color(55bp)=(cyan); color(65bp)=(blue);
+	color(75bp)=(violet); color(100bp)=(violet)
+}
+\newcaptionname{spanish}{\lstlistingname}{Listado}
+\def\dollar{\$}
+\lstset{
+	basicstyle=\footnotesize\ttfamily,  %Looks much better.
+	%columns=flexible, %Without this you get fixed-width fonts, which look bad.
+	breaklines=true,   %End-of-line wrap - you really want this, usually.
+	language=Python, 
+	texcl=true,
+	extendedchars=true,
+	columns=fullflexible,
+	keepspaces=true
+	%basewidth=0.4em,
+	%inputencoding=utf8
+	upquote=true,
+	numbers=left,
+	escapeinside={*@}{@*)},
+	xleftmargin=5ex,
+	%xrightmargin=5ex
+	showstringspaces=false,
+	breakatwhitespace   = true,
+	prebreak= \space,
+	postbreak   = \space,
+	literate={4>}{\$}1
+}
+\makeatletter
+\lst@InputCatcodes
+\def\lst@DefEC{%
+	\lst@CCECUse \lst@ProcessLetter
+	^^80^^81^^82^^83^^84^^85^^86^^87^^88^^89^^8a^^8b^^8c^^8d^^8e^^8f%
+	^^90^^91^^92^^93^^94^^95^^96^^97^^98^^99^^9a^^9b^^9c^^9d^^9e^^9f%
+	^^a0^^a1^^a2^^a3^^a4^^a5^^a6^^a7^^a8^^a9^^aa^^ab^^ac^^ad^^ae^^af%
+	^^b0^^b1^^b2^^b3^^b4^^b5^^b6^^b7^^b8^^b9^^ba^^bb^^bc^^bd^^be^^bf%
+	^^c0^^c1^^c2^^c3^^c4^^c5^^c6^^c7^^c8^^c9^^ca^^cb^^cc^^cd^^ce^^cf%
+	^^d0^^d1^^d2^^d3^^d4^^d5^^d6^^d7^^d8^^d9^^da^^db^^dc^^dd^^de^^df%
+	^^e0^^e1^^e2^^e3^^e4^^e5^^e6^^e7^^e8^^e9^^ea^^eb^^ec^^ed^^ee^^ef%
+	^^f0^^f1^^f2^^f3^^f4^^f5^^f6^^f7^^f8^^f9^^fa^^fb^^fc^^fd^^fe^^ff%
+	^^^^20ac^^^^0153^^^^0152^^^^2014^^^^2013^^^^2026^^^^2018^^^^2019^^^^03b8^^^^02a7^^^^019d^^^^0272%
+	^^^^20a7^^^^2190^^^^2191^^^^2192^^^^2193^^^^2206^^^^2207^^^^220a^^^^028e^^^^027e^^^^02b0^^^^029d%
+	^^^^2218^^^^2228^^^^2229^^^^222a^^^^2235^^^^223c^^^^2260^^^^2261^^^^03b2^^^^0263^^^^0115^^^^0103%
+	^^^^2262^^^^2264^^^^2265^^^^2282^^^^2283^^^^2296^^^^22a2^^^^22a3^^^^0271^^^^014b^^^^03c7^^^^014f%
+	^^^^22a4^^^^22a5^^^^22c4^^^^2308^^^^230a^^^^2336^^^^2337^^^^2339^^^^1ebd^^^^0129^^^^0168^^^^0169%
+	^^^^233b^^^^233d^^^^233f^^^^2340^^^^2342^^^^2347^^^^2348^^^^2349^^^^fb01^^^^fb02 %
+	^^^^2b7e %
+	^^^^234b^^^^234e^^^^2350^^^^2352^^^^2355^^^^2357^^^^2359^^^^235d%
+	^^^^235e^^^^235f^^^^2361^^^^2362^^^^2363^^^^2364^^^^2365^^^^2368^^^^0283%
+	^^^^236a^^^^236b^^^^236c^^^^2371^^^^2372^^^^2373^^^^2374^^^^2375^^^^02cc^^^^02c8%
+	^^^^2377^^^^2378^^^^237a^^^^2395^^^^25af^^^^25ca^^^^25cb^^^^201c^^^^201d%
+	^^00}
+\lst@RestoreCatcodes
+\makeatother
+
+
+\renewcommand{\chaptermark}[1]{\markboth{\textsc{#1}}{}}
+
+\renewcommand{\chaptermark}[1]{\markboth{\textsc{\ifnum \c@secnumdepth >\m@ne
+			\if@mainmatter
+			\@chapapp %\thechapter.\
+			\fi \fi #1}}{}}
+\def\sectionmark#1{\markright{%\thesection.\
+		#1}}
+\def\chaptermark#1{\markleft{%\thesection.\
+		#1}}
+\setlength\headheight{16pt}
+
+\newcommand{\unchapter}[1]{%
+	\begingroup
+	\let\@makechapterhead\@gobble % make \@makechapterhead do nothing
+	\chapter{#1}
+	\endgroup
+}
+
+
+\input{algo}
+\pgfplotsset{compat = newest}
+\newcounter{para} \setcounter{para}{0}
+\newcommand{\newpara}{%
+	\refstepcounter{para}%
+	\noindent\llap{\thepaescuelar. }\quad}
+\newcommand{\oldpara}[1]{%
+	\noindent\llap{\ref{#1}. }\quad}
+
+\def\triangledownshape{%
+	{0}%
+	{0}b{0}\\%
+	{0}t{-10}{20}\\%
+	%{8.66}t{-5}{10}\\%
+	{17.32}e{0}%
+}
+\def\triangledownpar#1{\Shapepar\triangledownshape #1\unskip\ {\fontspec{Junicode}}\par}
+\newcommand{\poetics}[1]{Arist. \emph{Poet.},\@ #1\nocite{aristoteles2010}\mancite}
+\newcommand{\aesthetics}[1]{Hegel \emph{Aesthetics III},\@ #1\nocite{hegel2016}\mancite}
+\newcommand{\ars}[1]{Hor. \emph{Ars},\@ #1\nocite{horacio1986}\mancite}
+
+\newcommand{\politeia}[1]{Plat. \emph{Rep.},\@ #1\nocite{platon2011}\mancite}
+
+
+\clubpenalty=9996
+\widowpenalty=9999
+\brokenpenalty=4991
+\predisplaypenalty=10000
+\postdisplaypenalty=1549
+\displaywidowpenalty=1602
+
+% etoolbox
+\newbool{specialtoc}
+
+\renewcommand{\cftchapterfont}{%
+	\ifbool{specialtoc}{%
+		\itshape
+	}{%
+		\bfseries
+	}%
+}
+
+\renewcommand{\cftchapterpagefont}{%
+	\ifbool{specialtoc}{%
+		\itshape
+	}{%
+		\bfseries
+	}%
+}
+
+
+%\makeatletter
+%\newcommand{\fonttitle}{\chaptitlefont}
+%\makechapterstyle{mystyle}{%
+%	\def\chapterheadstart{\vspace*{\beforechapskip}}
+%	\def\printchaptername{}
+%	\def\printchapternum{}
+%	\def\printchapternonum{}
+%	\def\printchaptertitle##1{%
+%		\fonttitle \if@mainmatter \thechapter.\space\fi ##1}
+%	\def\afterchaptertitle{\par\nobreak\vskip \afterchapskip}
+%}
+%\makeatother
+
+\setlength{\cftbeforepartskip}{2.5ex}
+\setlength{\cftpartnumwidth}{3em}
+\setlength{\cftbeforechapterskip}{0.5ex}
+\setlength{\epigraphwidth}{200pt}
+\epigraphposition{flushleft}
+\epigraphfontsize{\footnotesize}
+\setlength{\epigraphrule}{0pt}
+
+\newenvironment{changemargin}[3]{%
+	\begin{list}{}{%
+			\setlength{\leftmargin}{#1}%
+			\setlength{\rightmargin}{#2}%
+			\setlength{\topmargin}{#3}%
+		}%
+		\item[]}
+	{\end{list}}
+\raggedbottom
+
+
+\newcounter{excurso}
+\setcounter{excurso}{1}
+\newcommand*\rot{\rotatebox{90}}
+%\makeatletter
+%\DefineBibliographyExtras{spanish}{%
+%	\protected\def\mkbibmascord#1{\stripzeros{#1}.\textsuperscript{o}}%
+%	\protected\def\mkbibfemord#1{\stripzeros{#1}.\textsuperscript{a}}
+%	\setcounter{smartand}{0}%
+%	\renewbibmacro*{name:delim:apa:family-given}[1]{%
+%		\ifnumgreater{\value{listcount}}{\value{liststart}}
+%		{\ifboolexpr{
+%				test {\ifnumless{\value{listcount}}{\value{liststop}}}
+%				or
+%				test \ifmorenames
+%			}
+%			{\printdelim{multinamedelim}}
+%			{\lbx@finallistdelim{#1}}}
+%		{}}%
+%}
+%\makeatother
+
+%\DefineBibliographyStrings{spanish}{%
+%	andothers = {et al\adddot}
+%}

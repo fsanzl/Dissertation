@@ -1,0 +1,44 @@
+\begin{tikzpicture}
+% Place Silabeador
+\node[module] (I1) {Transcripción};
+\node[module,right=0.5cm of I1] (I2) {Etiquetado\\ gramatical};
+% Inner box around Items 2-3
+
+\path (I2.north)--node[above=2mm] (arc) {Escansión} (I1.north);
+
+
+\node[fit= (arc) (I1) (I2), draw, inner sep=2mm,rounded corners] (fit1) {};
+
+\node[dato, above=1cm of fit1] (verso) {Verso};
+\node[module,above=0.5cm of {verso}] (detabula) {Separación\\por verso};
+
+% Pandas
+\node[module,below=0.5cm of {fit1}] (I4) {Tabulación};
+%arrow between boxes
+\draw[->] (detabula)--(verso);
+\draw[->] (verso)--(fit1);
+
+\draw[->] (detabula)--(verso);
+\draw[->] (verso)--(fit1);
+
+\draw[->] (fit1)--(I4);
+
+%upper label
+%\path (fit1.north east)--node[above=15mm] (arc) {} (I4.north west);
+
+
+\node[datos,left=0.5cm of verso] (Estrofas) {División\\estrófica};
+\node[fit=(fit1) (I4) (detabula) (Estrofas) (I4), ,rounded corners, dashed,draw, inner sep=2mm, label={Análisis métrico}] (Overview) {};
+
+
+\node[datos,left=1cm of Estrofas] (Input) {Estructura\\dramática};
+
+\node[datos, right=0.5cm of Overview] (Output) {Texto\\procesado};
+
+
+
+\draw[->] (Estrofas.north)|-(detabula);
+\draw[->] (Input.east)|-(Estrofas);
+\draw[->] (Overview.east) -- (Output.west);
+
+\end{tikzpicture}

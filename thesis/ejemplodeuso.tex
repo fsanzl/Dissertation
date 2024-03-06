@@ -1,0 +1,113 @@
+\section*{Transcripción}\sectionmark{Transcripción}
+Vamos a mostrar un ejemplo de aplicación de las implementaciones en Python\index{Python} de los algoritmos propuestos. Con esto demostramos cómo hemos conseguido abstraernos de un problema relativamente complejo para convertirlo en una caja negra en la que, en una situación real, introducimos por un lado lo que deseamos analizar y obtenemos el análisis por el otro, sin tener que preocuparnos del proceso, lo descrito arriba, que lleva al resultado. Para esto, tomaremos la biblioteca informática Fonemas\index{biblioteca!Fonemas} \parencite{sanz2021sa} para Python\index{Python}, que aplica los algoritmos elaborados en el capítulo dedicado al análisis fonológico.
+
+\subsection*{Ejemplo de uso}
+Para facilitar la instalación y uso del software, este se encuentra  publicado bajo licencia libre \ac{gnu} \acl{gpl} (GPL), tanto su código fuente como en un paquete ya preparado para instalar. Esto podemos hacerlo directamente por medio del gestor de paquetes de Python\index{Python} desde la línea de órdenes\index{línea de órdenes}\footnote{Con frecuencia se emplea \textit{línea de comandos}\index{línea de comandos|see {línea de órdenes}}, que es un calco del inglés \textit{command line}.} del sistema operativo, con la prevención de que hay que instalar el paquete junto a la biblioteca Silabeador\index{biblioteca!Silabeador} \parencite{sanz2021sb}, de la que depende, como veremos un poco más adelante.
+
+\begin{lstlisting}[numbers=none, frame=none, keywordstyle=\ttfamily, language=bash]
+	4> pip install silabeador fonemas
+\end{lstlisting}
+
+Una vez hecho esto, ya tenemos esta biblioteca disponible para hacer transcripciones y podemos cargarla en nuestros programas para emplearla cuando necesitemos hacerlo. La forma más simple de hacerlo es arrancar el intérprete interactivo de Python y crear una instancia de la clase \texttt{Transcription}\footnote{En la implementación material con Python hemos optado por emplear el inglés para maximizar el número de personas que pueden examinar el código fuente de forma intuitiva en el repositorio público en el que está albergado.}. Ilustraremos con un ejemplo cómo hacemos una sencilla transcripción de, verbigracia, \textit{verbigracia}. El procedimiento se limita a introducir las dos instrucciones que mostramos a continuación.
+
+\begin{lstlisting}[numbers=none, frame=none, keywordstyle=\ttfamily,  language=bash]
+	4> python
+	Python 3.9.2 (default, Feb 28 2021, 17:03:44) 
+	[GCC 10.2.1 20210110] on linux
+	Type "help", "copyright", "credits" or "license" for more information.
+	>>> from fonemas import Transcription
+	>>> texto_transcrito = Transcription('verbigracia')
+\end{lstlisting}
+Veamos qué hemos hecho. Primero pedimos al sistema operativo que inicie un intérprete interactivo de Python\index{Python}. Esto lo hacemos en la línea de órdenes\index{línea de órdenes} mediante el mandato que aparece tras el símbolo del dólar. Como respuesta, el intérprete nos facilita datos sobre la versión y nos informa de cómo podemos ampliar la información. Tras esto, nos presenta tres signos seguidos de \textit{mayor que}, que son la manera en que nos invita a introducir instrucciones de Python. Así lo hacemos, en este caso, importando primero la clase\index{clase} \texttt{Transcription} del módulo \texttt{fonemas}. Esto tiene como objetivo poder emplearla en la siguiente instrucción. En esta, creamos el objeto\index{objeto} \texttt{texto\_transcrito}, que es una instancia de la clase \texttt{Transcription}, y le pasamos el argumento \texttt{'verbigracia'}. El objeto que hemos creado contiene la información fonológica y fonética que requerimos. 
+
+Si deseamos  acceder a esta información fonológica y fonética de la palabra, podemos hacerlo leyendo el valor de los atributos del objeto \texttt{texto\_transcrito} que hemos creado. Así, en \texttt{texto\_transcrito.phonology.words} encontraremos el texto dividido por palabras y en \texttt{texto\_transcrito.phonology.syllables} dividido por sílabas. De manera análoga tenemos las transcripciones fonéticas en \ac{afi} y \ac{sampa} en los subatributos \texttt{words} y \texttt{syllables} de sendos atributos \texttt{texto\_transcrito.phonetics} y \texttt{texto\_transcrito.sampa}, respectivamente.
+\begin{lstlisting}[numbers=none, frame=none, keywordstyle=\ttfamily,  language=bash]
+	>>> texto_transcrito.phonology.words
+	['beɾbiˈgɾaθja']
+	>>> texto_transcrito.phonology.syllables
+	['beɾ', 'bi', 'ˈgɾa', 'θja']
+	>>> texto_transcrito.phonetics.words
+	['βeɾβiˈɣɾaθja']
+	>>> texto_transcrito.phonetics.syllables
+	['βeɾ', 'bi', 'ˈɣɾa', 'θja']
+	>>> texto_transcrito.sampa.words
+	['BerBi"GraTja']
+	>>> texto_transcrito.sampa.syllables
+	['Ber', 'bi', '"Gra', 'Tja']
+\end{lstlisting}
+El ejemplo anterior no necesita mayor explicación. De esta manera transcribimos y accedemos a las transcripciones manualmente; de la misma manera, los programas que emplean la biblioteca Fonemas se limitan a hacer llamadas equivalentes y, como nosotros en esta primera prueba, permanecen ajenos a las operaciones que esta lleva a cabo para llegar al resultado.
+
+\section*{Silabación}\sectionmark{Silabación}
+Para facilitar el uso del modelo de pruebas de Python\index{Python}, la biblioteca proporciona dos funciones adicionales que pueden ser usadas de manera inmediata  sin necesidad de crear explícitamente un objeto de la clase \texttt{Syllabification} (equivalente a la clase \texttt{Silabación} que hemos visto). Estas son las funciones \texttt{syllabify()} y \texttt{tonica()}, que pueden ser invocadas rápidamente y devuelven las sílabas de una palabra y la posición de la sílaba tónica, respectivamente. Se limitan a hacer una llamada a \texttt{Syllabification} y devolver el atributo correspondiente como hemos desarrollado en detalle arriba, y permiten indicar si se han de omitir las excepciones, que están activadas por defecto.
+
+\subsection*{Ejemplo de uso}
+El módulo de silabación es independiente del transcriptor fonológico, por lo que, al igual que este, podemos instalarlo y usarlo por separado. El proceso de instalación es el mismo que con la otra biblioteca.
+
+\begin{lstlisting}[numbers=none, frame=none, keywordstyle=\ttfamily,  language=bash]
+	4> pip install silabeador
+\end{lstlisting} %$
+Podemos probar que todo funciona como es debido invocando el intérprete interactivo de Python\index{Python} pidiéndole que divida las palabras de una frase en sus sílabas y nos devuelva estas y la posición de la sílaba acentuada.
+\begin{lstlisting}[numbers=none, frame=none, keywordstyle=\ttfamily,  language=bash]
+	4> python
+	Python 3.9.2 (default, Feb 28 2021, 17:03:44) 
+	[GCC 10.2.1 20210110] on linux
+	Type "help", "copyright", "credits" or "license" for more information.
+	>>> words = 'El gran teatro del mundo de Pedro Calderón de la Barca'
+	>>> from silabeador import Syllabification
+	>>> [(s.syllables, s.stress) for s in [Syllabification(w) for w in sentence.split()]]
+	[(['El'], -1), (['gran'], -1), (['te', 'a', 'tro'], -2), (['del'], -1), (['mun', 'do'], -2), (['de'], -1), (['Pe', 'dro'], -2), (['Cal', 'de', 'rón'], -1), (['de'], -1), (['la'], -1), (['Bar', 'ca'], -2)]
+\end{lstlisting}
+
+Como dijimos, para la versión en Python\index{Python} hemos dotado a la clase de la capacidad de operar de distintas maneras a las que necesitamos en nuestro trabajo. Para ello, podemos pasarle  los argumentos adicionales \texttt{exceptions}, \texttt{ipa} y \textit{h}. El primero de estos argumentos sirve para indicar si la silabación debe hacerse ignorando las excepciones. Esto puede facilitar una división silábica más fiel a la pronunciación en determinadas variedades del español contemporáneo. El segundo argumento, es imprescindible para permitir el uso general del módulo silabeador, pues su valor determina si el texto va a leerse como grafémico o fonémico. Cabe pensar que la división silábica ortográfica encontrará más aplicaciones que la fonémica. Por ese motivo, aunque aquí asumamos que el texto es fonémico, en el diseño en Python la opción por defecto es grafémica y se necesita indicar de forma explícita que el valor de \texttt{ipa} es \texttt{False} al crear un objeto de la clase.  La tercera opción solo es relevante para textos grafémicos, pues modifica el comportamiento de la división silábica en grupos con \textit{h} posconsonántica, de modo que si se activa, la división silábica será ortográfica (\textit{in·hi·bir}) y, si no se indica nada, será fonológica (\textit{i·nhi·bir}).
+
+\section*{Escansión métrica}\sectionmark{Escansión métrica}
+ Finalmente, la biblioteca de escansión de los versos proporciona la clase \texttt{VerseMetre}. Esta biblioteca pone en uso todo lo desarrollado antes para escandir versos. La manera más simple de usarla es es importar la biblioteca que contiene la clase, de la que creamos una instancia. El único parámetro obligatorio es el verso a escandir. Adicionalmente, en caso de que el metro dependa del entorno, puede recibir de manera opcional una lista de posibles metros conforme a las expectativas. De esta manera, si estamos analizando un soneto, antepondremos once sílabas, pero al encontrar endecasílabos en una obra teatral, pondremos once y siete delante; procederemos de forma análoga según lo que convenga en cada situación. 
+
+\subsection*{Ejemplo de uso}
+El módulo de escansión depende de los dos anteriores, por lo que estos habrán de instalarse de no encontrarse ya en el sistema para satisfacer los requisitos del programa de escansión. El proceso de instalación es el mismo que con las otras dos bibliotecas.
+
+\begin{lstlisting}[numbers=none, frame=none, keywordstyle=\ttfamily,  language=bash]
+	4> pip install libEscansion
+\end{lstlisting} %$
+El funcionamiento es ciertamente sencillo. Solo se requiere invocar la clase para crear una instancia de ella. Los atributos de este objeto contienen la descripción métrica del verso.
+\begin{lstlisting}[numbers=none, frame=none, keywordstyle=\ttfamily,  language=bash]
+	4> python
+	Python 3.9.2 (default, Feb 28 2021, 17:03:44) 
+	[GCC 10.2.1 20210110] on linux
+	Type "help", "copyright", "credits" or "license" for more information.
+	>>> from libEscansion import VerseMetre
+	>>> línea = 'Alma a quien todo un dios prisión ha sido'
+	>>> verso = VerseMetre(línea)
+	>>> verso.rhyme
+	'ido'
+	>>> verso.asson
+	'io'
+	>>> verso.rhythm
+	'+--+++-+++-'
+	>>> verso.nuclei
+	'AaeOUOiOAIo'
+	>>> verso.syllables
+	[['Al', 'ma'], ['kjen'], ['tO', 'dŏUn'], ['djOs'], ['pɾi', 'sjOn'],
+	['ʰA'], ['sI', 'do']]
+	>>> verso.synaloephas
+	[([0, 1], 4.0, 'ma', 'a'), ([3, 1], -4.0, 'do', 'Un')]
+	>>> verso.count
+	11
+	>>> verso.natural
+	11
+\end{lstlisting}
+
+Manipulando el parámetro de metros esperados, se altera el comportamiento de la escansión. Por ejemplo, si en lugar de estar analizando un soneto esperáramos encontrar un verso alejandrino, indicaríamos al crear el objeto que trate de forzar la escansión a catorce sílabas.
+
+\begin{lstlisting}[numbers=none, frame=none, keywordstyle=\ttfamily,  language=bash]
+	>>> verso = VerseMetre(línea, [14, 8, 11, 7, 6, 5, 4])
+	>>> verso.syllables
+	[['Al', 'ma'], ['a'], ['kjen'], ['tO', 'do'], ['Un'], ['djOs'],
+	['pɾi', 'si', 'On'], ['ʰA'], ['sI', 'do']]
+	>>> verso.count
+	14
+	>>> verso.natural
+	11
+\end{lstlisting}
+
+Al contrario que en el caso anterior, en el que la escansión sigue las reglas al pie de la letra, ahora cobra sentido el último atributo, pues indica el resultado de la escansión \textit{natural}. Dado que hemos forzado la escansión a catorce sílabas, esta difiere de aquella. En nuestro caso, no usamos la biblioteca de forma interactiva, sino que va integrada en un \textit{script}, que se encarga de escandir los versos y guardar los resultados donde corresponde.

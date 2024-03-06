@@ -1,0 +1,39 @@
+\begin{tikzpicture}
+
+
+
+\begin{scope}[local bounding box=A]
+	\node[datos] (Versos) {Estructura\\dramática};
+	\node[module,below=0.5cm of Versos] (detabula) {Separación\\por verso};
+	\node[dato,below=0.5cm of detabula] (verso) {Verso};
+	\node[module,below=0.5cm of verso] (escansion) {Escansion\\sin contexto};
+	\draw[->] (Versos.south)--(detabula);
+	\draw[->] (detabula.south)--(verso);
+	\draw[->] (verso.south)--(escansion);
+
+	\node[fit=(Versos) (detabula) (verso) (escansion), rounded corners, dashed,draw, inner sep=4mm, label={I}] (segundo) {};
+\end{scope}
+
+
+\begin{scope}[shift={($(segundo.east)+(2.4cm,0.84cm)$)}]
+	\node[datos] (versos1) {Versos\\escandidos};
+	\node[module,below=0.5cm of versos1] (detabula1) {Separación\\por estrofas};
+	
+	\draw[->] (versos1.south)--(detabula1);
+	\node[fit=(versos1) (detabula1) , rounded corners, dashed,draw, inner sep=4mm, label={II}] (Overview) {};
+\end{scope}
+
+\begin{scope}[shift={($(Overview.east)+(2.4cm,2.187cm)$)}]
+	\node[dato] (estrofa) {Estrofa};
+	\node[module,below=0.5cm of estrofa] (detabula2) {Separación\\por verso};
+	\node[dato,below=0.5cm of detabula2] (verso1) {Verso};
+	 \node[module,below=0.5cm of verso1] (escansion1) {Escansion\\contextual};
+	\draw[->] (estrofa.south)--(detabula2);
+	\draw[->] (detabula2.south)--(verso1);
+	\draw[->] (verso1.south)--(escansion1);
+	\node[fit=(estrofa) (detabula2) (verso1) (escansion1), rounded corners, dashed,draw, inner sep=4mm, label={III}] (Overview2) {};
+\end{scope}    
+
+\draw[->] (segundo.east)--(Overview.west);
+\draw[->] (Overview.east)--(Overview2.west);
+\end{tikzpicture}

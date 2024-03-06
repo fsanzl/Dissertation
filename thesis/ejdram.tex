@@ -1,0 +1,171 @@
+Durante la investigación para esta tesis nos familiarizamos dentro del proyecto Sound and Meaning con los análisis cuantitativos del léxico y el metro de corpus teatrales. Sin embargo, faltaba la perspectiva de potenciales investigadores de las características dramáticas de los textos para tener el cuadro completo. Por ello, decidimos analizar una pieza teatral cuantitativamente de manera completamente manual para conocer así las necesidades de tales análisis y, con ello, las soluciones digitales que podemos aportar. Estimamos que resulta de interés y lo hemos incluido en este apéndice, pues muestra mediante el ejemplo las dificultades que presenta la extracción, recopilación y tratamiento de datos sobre el drama sin ayuda técnica. Se limita tan solo la primera jornada de \textit{La vida es sueño}\footnote{Nos guiamos por la edición de Ciriaco Morón para aprovechar la segmentación en escenas,pues usa la división de Hartzenbusch~\parencite{calderon_hartzenbusch}. Esta resulta útil para aclarar los conceptos, incluso si toma decisiones como disponer las escenas VII y VIII no solo dividiendo en dos un romance, sino partiendo sin contemplaciones el parlamento de Clotaldo. Tanto las dos primeras ediciones publicadas en 1636, la una en Zaragoza \parencite{calderon_zaragoza} y en Madrid la otra \parencite{calderon_madrid}, como la edición que Vera Tassis \parencite{calderon_vt} curó a partir de ambas, contemplan las líneas de Clotaldo como un único parlamento\index{parlamento}. A falta de manuscritos u otras versiones de autoridad equivalente, parece que la edición de Ruano de la Haza~\parencite{calderon_ruano} se ajusta más tanto al texto como a los criterios objetivos que hemos visto, pues reparte la jornada en dos cuadros separados por la salida al escenario de Astolfo y Estrella, en coincidencia con cambios métrico y espaciales. Sin embargo, aunque nos inclinamos por el criterio de Ruano de la Haza, la distribución de Hartzenbusch resulta óptima a efectos ilustrativos. En este caso, el fin justifica los medios.} \parencite{calderon_lavidaessuenno}, pues resulta más que suficiente para evidenciar los requerimientos de este tipo de pruebas. En el futuro —ahora sí, con ayuda del computador—, podría extenderse para hacer un análisis de la comedia entera, así como de otras, para encontrar patrones de interés.
+		
+Iremos presentando las magnitudes y aplicándolas al texto para observar los elementos que nos permiten hallarlas. Esos elementos son precisamente nuestra meta. El análisis que haremos sigue el modelo del seminal trabajo de \citeauthor{dinu1968}~\parencite*{dinu1968}. En este se lleva a cabo una aproximación matemática al análisis del texto dramático de la manera que más tarde \citeauthor{romanska2015}~\parencite*[446]{romanska2015} denominaría \textit{dramétrica}\index{dramétrica}.
+
+\section*{Presencia en escena}\markright{Presencia en escena}
+ Empezando por análisis globales, Marcus \parencite*[292-310]{marcus1973} propone una serie de magnitudes, que enumeraremos y describiremos brevemente. La primera es la \textit{densidad escénica}\index{densidad escénica}, cuyo cálculo requiere definir primero una \textit{matriz de presencia} de la escena. En esta, cada línea representa un personaje, cada columna una escena, y en las celdas se indica la presencia o ausencia del personaje en la escena\index{escenografía} correspondiente. Lo ilustramos con la matriz de presencia de \Cref{fig:drama}, que representa las escenas en que se divide la primera jornada de \textit{La vida es sueño}. A la clasificación binaria de Marcus le hemos añadido los matices de si el personaje habla o no y si lo hace desde dentro.
+
+En la escena primera solo están presentes dos personajes, Rosaura y Clarín, que dialogan alternándose en el turno de palabra. En la siguiente, tenemos también a Segismundo en la torre, de ahí que no tenga presencia mientras está dentro, pero sí diálogo, cuando pronuncia «¡Ay mísero de mí! ¡Ay infelice!». En la siguiente oímos a Clotaldo dentro, a pesar de que no sale hasta su segunda intervención; lo hace junto a un grupo indeterminado de soldados, si bien es aquel el que sostiene el peso del diálogo, apoyado por Segismundo y, en menor medida, por Clarín y Rosaura. El quinto parlamento de la escena lo pronuncia alguien indeterminado \textit{dentro}. En la cuarta escena, ya sin Segismundo, salvo un par de breves intervenciones de Clarín y una interrupción de un soldado, conversan Rosaura y Clotaldo. En la quinta escena hablan Astolfo y Estrella en presencia de soldados y las damas de la infanta, que no intervienen. Lo mismo pasa en la mayor parte de la sexta escena, aunque esta sucede en presencia de Basilio y su acompañamiento, que le ponen fin. Rosaura y Clarín vuelven en la séptima escena a compartir tablas con Clotaldo y Basilio, aunque dejan a estos dos todos los diálogos, sin intervenir. Sí lo hacen, por el contrario, en la octava y última escena de la jornada, Clarín, de forma fugaz al principio, y Rosaura, en un largo diálogo con Clotaldo, hasta que Rosaura y Clarín salen antes de terminar el acto, al que pone fin Clotaldo con un monólogo.
+
+La densidad escénica se define como la razón entre el número de personajes presentes en una escena y el número total de personajes. Por consiguiente, la densidad escénica de la primera escena, en la que participan dos personajes de los diez posibles, es {0{,}2} mientras que la escena sexta tiene {0{,}6} (\Cref{tab:densidad}). Además de disponer de la distribución y de los personajes presentes en cada segmento, necesitaremos saber también el número total de personajes envueltos en el texto a analizar.
+
+\input{tables/densidad}
+
+Marcus define después los tipos de relaciones entre los personajes. Para ello, propone asignarle a cada uno de ellos un conjunto de números naturales, correspondientes  a las escenas en las que están presentes. Sean los personajes $x$ e $y$ de una obra o un fragmento de una obra, el conjunto de cuyas escenas denominaremos $A$. A los personajes $x$ e $y$ les asignamos sendos conjuntos $Ax$ y $Ay$, cuyos elementos son los números correspondientes a las escenas en las que están presentes $x$ e $y$, respectivamente. Si $Ax = Ay$, llamaremos \textit{concomitantes} a los personajes  $x$ e $y$. Diremos que el personaje $x$ está \textit{dominado} por el personaje $y$ si  $Ax \subset Ay$ y, al contrario, $y$ \textit{dominará} al personaje $x$ si $Ay \subset Ax$. Si no se da ninguna de las dos situaciones, hablaremos de dos personajes \textit{escénicamente independientes}, que suele ser la relación más habitual.
+
+Dentro de los personajes\index{personaje} independientes, encontramos diferentes categorías. Si $Ax \cap Ay = \emptyset$, esto es, $x$ e $y$ no coinciden en escena, decimos que son \textit{alternativos}. Si, además, $\lvert Ax \cup Ay \rvert = \lvert A \rvert$, o lo que es lo mismo, si en todas las escenas de la obra aparece o bien el personaje $x$ o bien el personaje $y$, serán además \textit{complementarios}.
+
+Los datos de los que ya disponíamos permiten llevar a cabo estos cálculos para estimar los valores de las magnitudes vistas. Si aplicamos esto a los personajes de la primera jornada de \textit{La vida es sueño}, obtenemos los conjuntos siguientes, cuyos cardinales mostramos en \Cref{fig:dramacuatro}.
+
+%\begin{equation}
+\begin{equation*}\begin{aligned} 
+		A_{\textsc{Ros}} = \{1, 2, 3, 4, 7, 8\} \\
+		A_{\textsc{Clar}} = \{1, 2, 3, 4, 7, 8\} \\
+		A_{\textsc{Segis}} = \{2, 3\} \\
+		A_{\textsc{Clot}} = \{3, 4, 7, 8\} \\
+		A_{\textsc{Sol}} = \{3, 4, 5, 6\} \\
+		A_{\textsc{Ast}} = \{5, 6\} \\
+		A_{\textsc{Estr}} = \{5, 6\} \\
+		A_{\textsc{Damas}} = \{5, 6\} \\
+		A_{\textsc{Bas}} = \{6, 7\}		 \\		
+		A_{\textsc{Acom}} = \{6\}
+\end{aligned}\end{equation*}
+
+Tomemos por ejemplo a Rosaura. Vemos que $A_{\textsc{Ros}} = A_{\textsc{Clar}}$, por lo que esta y Clarín son concomitantes en esta jornada. Se verifica que   $A_{\textsc{Segis}} \subset A_{\textsc{Ros}}$, por lo que Rosaura domina a Segismundo. Ninguna de estas condiciones se cumple si comparamos a Rosaura con Clotaldo, por lo que cabe afirmar que son independientes. Sin embargo, $A_{\textsc{Ros}} \cap A_{\textsc{Clot}} = \{3, 7,8\}$, por lo que no son alternativos. Por otra parte, $A_{Ros} \cap A_{Acom} = \emptyset$, por lo que, en este caso, Rosaura y el acompañamiento de Basilio sí serían alternativos. Sin embargo, dado que $\lvert A_{\textsc{Ros}}\rvert = 6$, $\lvert A_{\textsc{Acom}}\rvert = 1$ y $\lvert A\rvert = 8$, no serían complementarios, puesto que  $\lvert A_{\textsc{Ros}} \cup A_{\textsc{Acom}} \rvert < \lvert A \rvert$. En el caso de Astolfo, $A_{\textsc{Ros}} \nsubseteq A_{\textsc{Ast}}$ y $A_{\textsc{Ros}} \nsubset A_{\textsc{Ast}}$, por lo que son independientes. Asimismo, $A_{\textsc{Ros}} \cap A_{\textsc{Ast}} = \emptyset$, por lo que son alternativos y, además, $\lvert A_{\textsc{Ast}}\rvert = 2$, por lo que $\lvert A_{\textsc{Ros}} \cup A_{\textsc{Ast}} \rvert = \lvert A \rvert$, lo que hace a Rosaura y Astolfo personajes complementarios en esta jornada.
+
+\begin{figure}[!ht]
+	\centering\small
+	\input{figures/dramacuatro}
+	\caption{Presencia en las distintas configuraciones.}
+	\label{fig:dramacuatro}
+\end{figure}
+
+Otra forma de definir la relación entra un personaje $x$ y un personaje $y$ es encontrar su \textit{distancia escénica}. Esta se define como una \textit{cadena de $x$ a $y$}, una secuencia de personajes $z_1, z_2, ..., z_n$ que cumplen que $z_1=x_1$, $z_n=y$ y $z_i$ y $z_{i+1}$ no son alternativos para ningún valor de $i$, siendo $1 \leq i \leq n$. Así, tomemos a Segismundo y Basilio, dos personajes alternativos. La distancia $d(\textsc{Segis}, \textsc{Bas}) = 2$: de Segismundo a Clotaldo y, de este, a Basilio. Si no es posible definir una cadena entre dos personajes —\nolinebreak por ejemplo, si intentamos buscar una cadena en sentido contrario, de Basilio a Segismundo\nolinebreak—\nolinebreak, diremos que la distancia escénica es infinita. La mayor de las distancias escénicas entre personajes se denomina \textit{diámetro escénico}\footnote{Es traducción literal. En el original se denomina \textit{Durchmesser}.} de la obra. En este caso, también sería $2$, al ser esta la mayor distancia posible. Sea como fuere, nos sigue bastando con los elementos que ya habíamos encontrado: segmentos y personajes de cada segmento.
+
+\section*{Personajes en el conjunto}\markright{Personajes en el conjunto}
+
+Las magnitudes anteriores describen características relativas de un personaje respecto a otro, pero no los ubican en el conjunto de la obra. Para hacer esto, nos valdremos del valor resultante del sumatorio de las distancias escénicas del personaje $x$ de cada uno del resto de los personajes (\ref{eq:1}).
+
+\begin{equation}\label{eq:1}
+	d(x) = \sum{d(x,y)}
+\end{equation}
+
+De esta manera, vemos en \Cref{tab:distancia} las distancias entre los personajes de la primera columna y los demás, que ocupan cada una de las columnas siguientes y, al final, la distancia $d$. Nótese que esta última magnitud para un personaje respecto de sí mismo es nula. En este caso, el menor valor $d$ lo tienen los soldados: acabamos de toparnos con el primer problema. Efectivamente, los datos que hemos obtenido no son suficientes. La trampa está en que —\nolinebreak cabe esperar\nolinebreak— los soldados que acompañan a Clotaldo y los que van con Astolfo son personajes diferentes, incluso si el texto no lo menciona explícitamente o los recursos de la representación obligan a que los mismos actores\index{actor} interpreten ambos acompañamientos. Aquí, como en casi todo, conviene aplicar una buena dosis de sentido común antes de lanzarse a las interpretaciones literales. Al asignar personajes sin considerar la evidencia interna, hemos dado con una de las principales dificultades, si no la principal, de las que encontraremos para automatizar la extracción de los datos del texto. La situación contraria es también habitual, esto es, personajes que se nombran de maneras diferentes: \textsc{Músicos} o \textsc{Música}, pero también, especialmente en autos sacramentales, personajes alegóricos que reciben diferentes nombres según el momento de la obra y su función dentro de esta. El formato \ac{xmltei} resuelve esto mediante la asignación de un identificador único independiente del nombre textual a cada personaje, por lo que puede haber personajes diferentes con el mismo nombre o un mismo personaje nombrado de diferentes maneras, siempre que a cada uno, con independencia de como se le llame, le corresponda un y solo un identificador. 
+
+\input{tables/distancia}
+
+Otra posibilidad es obtener un valor $\delta$, siendo $0 \leq \delta(x) \leq d(x)$. En este caso, tomamos la mayor distancia entre un personaje $x$ y cualquiera de los otros personajes. Así, $\delta(\textsc{Ros}) = 2$ mientras que $\delta(\textsc{Ast}) = \infty$. Lo formalizamos mediante la ecuación \ref{eq:2}.
+
+\begin{equation}\label{eq:2}
+	\delta(x) = \max_{x \neq y} d(x,y)
+\end{equation}
+
+La siguiente magnitud a considerar es el número de escenas en que dos personajes $x$ e $y$ aparecen juntos, que denominamos $\gamma(x,y)$. De manera análoga a los cálculos de las magnitudes absolutas que hemos hecho en las ecuaciones \ref{eq:1} y \ref{eq:2}, definiremos también aquí (\ref{eq:3}) un índice que dé una idea de la tendencia de un personaje a compartir escena con otros. 
+
+\begin{equation}\label{eq:3}
+	\gamma(x) = \sum_{x \neq y}{\gamma(x,y)}
+\end{equation}
+
+Hemos recopilado en \Cref{tab:gamma} los valores de $\gamma$ de los personajes, tanto relativos para con cada uno de los otros como absolutos, en la última columna. Vemos, por ejemplo, que  $\gamma(\textsc{Ros},\textsc{Clar}) = 6$, ya que Rosaura y Clarín aparecen juntos en seis escenas o $\gamma(\textsc{Ros},\textsc{Clot}) = 4$, que es el número de veces que Rosaura comparte escenario con Clotaldo en esta jornada.
+
+\input{tables/gamma}
+
+
+Este marcador está relacionado con lo que en la teoría de la información se denomina \textit{distancia de Hamming}. Se define esta como el número de posiciones con valores divergentes que diferencian dos palabras válidas en un código dado. Por ejemplo, la distancia de la palabra \textit{casa} respecto a  \textit{ca\textbf{l}a} es $1$, con \textit{\textbf{p}a\textbf{l}a} es $2$, con \textit{\textbf{p}a\textbf{lo}} es $3$ y con \textit{\textbf{pelo}} es $4$. Análogamente, definimos un código binario de palabras de tamaño igual al número de escenas de la obra y con tantas palabras como personajes intervienen en ella. Para hacerlo, retornemos una vez más a la primera jornada de \textit{La vida es sueño}, cuyos valores recogemos en \Cref{tab:presencia}\footnote{La disposición en orden inverso de las escenas en el cuadro es arbitraria. Obedece a un propósito ilustrativo, a saber: que la caracterización binaria de cada personaje imite a la convención matemática del valor posicional de los dígitos y facilitar así la analogía.}.
+
+\input{tables/presencia}
+
+Como medida para calcular la distancia entre dos personajes, Marcus propone hallar primero la \textit{diferencia simétrica} de la distancia que separa ambos conjuntos. Definimos esta operación para $A$ y $B$ como	$A \triangle B = (A \smallsetminus B) \cup (B \smallsetminus A)$. Esto es, la unión de los elementos que $A$ no comparte con $B$ y viceversa. Para nuestro propósito, esto corresponde al conjunto de escenas en las que aparece uno u otro personaje, pero no los dos juntos. La distancia de Hamming será el cardinal del conjunto resultante de aplicar la diferencia simétrica, lo que denotamos formalmente según la ecuación \ref{eq:4}.
+
+\begin{equation}\label{eq:4}
+	h(A,B) = \lvert A \triangle B\rvert
+\end{equation}
+
+Esta medida por sí misma resulta un tanto confusa. Por ejemplo, Segismundo mantiene la equidistancia con el resto de personajes, con excepción del acompañamiento de Basilio (\Cref{tab:hamming}). De las seis escenas de Rosaura, dos las comparte con Segismundo, por lo que su distancia de Hamming es $4$; lo mismo que con Astolfo, pues cada uno tiene dos escenas en las que no coinciden. Sin embargo, conservaremos esta medida, pues va a resultar de gran utilidad en los cálculos que siguen.
+
+\input{tables/hamming}
+
+En efecto, si emprendemos la aproximación contraria, esto es, calcular no el alejamiento, sino el grado de proximidad, la distancia de Hamming demuestra su utilidad. La proximidad entre los personajes $x$ e $y$ es la diferencia entre el número de escenas en las que aparecen uno o ambos y la distancia de Hamming que los separa (\ref{eq:5}).
+
+\begin{equation}\label{eq:5}
+	\gamma(x,y) = \lvert Ax \cup Ay\rvert -  h(x, y)
+\end{equation}
+
+Hemos llegado por otro camino al resultado que obteníamos observando la \textit{copresencia escénica}\index{copresencia escénica} (\Cref{tab:gamma}), lo que permite hilar más fino al comparar los personajes. Si bien esto parece un asunto trivial, en la práctica supone dos aproximaciones diferentes. La copresencia demanda evaluar la presencia escénica de ambos personajes de forma concurrente, mientras que esta nueva forma implica hallar sucesivamente los valores individuales de cada personaje y hacer el cálculo al final. En cualquier caso, si volvemos a los resultados relativos que vistos allí, destaca, por un lado, que Rosaura y Clarín sean los personajes más próximos. Pero tal vez llama más la atención la equidistancia que mantiene Basilio para con todos los personajes excepto uno, que no es otro que su hijo Segismundo.
+
+\section*{Densidad}\markright{Densidad}
+
+Otra medida que propone Marcus es la \textit{densidad de la escena}, esto es, el número de personajes que intervienen en ella. Para nuestra jornada, $\alpha_\textsc{i} = 2$, $\alpha_\textsc{ii} = 3$, $\alpha_\textsc{iii} = 6$,  $\alpha_\textsc{iv} = 5$, $\alpha_\textsc{v} = 6$,  $\alpha_\textsc{vi} = 9$, $ \alpha_\textsc{vii} = 4$ y $\alpha_\textsc{viii} = 3$, si asumimos —\nolinebreak por conveniencia\nolinebreak— que cada personaje colectivo está interpretado por dos actores\index{actor}. Los cambios cuantitativos en las configuraciones escénicas se obtienen aplicando la fórmula de la ecuación \ref{eq:6}, en la que $\mu$ representa la media de personajes por escena.
+
+\begin{equation}\label{eq:6}
+	\beta(n) = \lvert \mu - \alpha(n) \rvert
+\end{equation}
+
+Si tomamos las consideraciones hechas para los personajes colectivos, $\mu=4{,}75$, por lo que, por ejemplo, $\beta_\textsc{i} = 2{,}75$ y $\beta_\textsc{vi} = 4{,}25$, es obligado considerar otro aspecto. Pensemos, por ejemplo, en un monólogo: dado que el sumatorio para calcular $\gamma$ excluye la copresencia de un personaje consigo mismo —\nolinebreak que ocurre en todas las escenas en las que interviene\nolinebreak—, una escena monologada no tendría influencia. Sin embargo, sabemos que este tipo de escenas —\nolinebreak que denotaremos como $\alpha'(x)$\nolinebreak—\nolinebreak, lejos de ser secundarias, tienden a realzar el protagonismo del personaje que interviene. Marcus propone una nueva medida (\ref{eq:7}) como respuesta. En este caso, esta incluso corrige nuestro desliz con los soldados a la hora de establecer los personajes con más relevancia escénica (\Cref{tab:gamma}).
+
+\begin{equation}\label{eq:7}
+	\lambda(x) = \sum_{y}{\gamma(x,y)}
+\end{equation}
+
+\section*{Aproximación probabilística}\markright{Aproximación probabilística}
+Una manera diferente de caracterizar elementos de la obra teatral es mediante expresiones probabilísticas. Así, \citeauthor{dinu1968}~\parencite*{dinu1968} sugiere partir de la frecuencia de un personaje $X$ dado $f_i = \frac{n_i}{N}$, donde $N$ es el número total de escenas y $n_i$ el número de escenas en las que interviene el personaje $x$. Un número de escenas suficiente da ocasión de calcular la probabilidad $P(X_i)$ de que el personaje $x_i$ intervenga en una escena aleatoria dada. Además, sabemos que esta probabilidad se aproxima a la frecuencia de las intervenciones de dicho personaje (\ref{eq:8}). 
+
+\begin{equation}\label{eq:8}
+	P_i = P(X_i)\approx f_i
+\end{equation}
+
+Extendemos esto a la copresencia\index{copresencia escénica} de dos personajes $X_i$ y $X_j$. La probabilidad $P_{ij}$ de que ambos personajes coincidan en una escena es el producto de las probabilidades de que aparezca en escena cada uno de ellos (\ref{eq:9}).
+\begin{equation}\label{eq:9}
+	P_{ij} = P(X_i \cap X_j) = P(X_i).P(X_j)\approx f_i\cdot f_j = \frac{n_i n_j}{N^2}
+\end{equation}
+
+De esto se deduce el número de escenas en las que los personajes $X_i$ y $X_j$ coincidirán, según la ecuación \ref{eq:10}.
+\begin{equation}\label{eq:10}
+	\bar{n}_{ij} = N\cdot P_{ij}=N\cdot P_i\cdot P_j \approx N\cdot f_i\cdot f_j = \frac{n_i n_j}{N}
+\end{equation}
+
+Hemos recogido en \Cref{tab:probabilidad} los valores correspondientes a la primera jornada de \textit{La vida es sueño}. Por ejemplo, según esta, la probabilidad de que en una escena al azar aparezca Rosaura es del 75~\%, mientras que la probabilidad de encontrar al acompañamiento de Basilio apenas alcanza el 12{,}5~\%. Según la estadística, encontrarnos a Rosaura y Clarín juntos debería ser una cuestión de cara o cruz, lo que, como sabemos, no es así. 
+
+\input{tables/probabilidad}
+
+Para reflejar que $\bar{n}_{ij}$ difiere del número real $n$ de escenas en las que coinciden los personajes\index{personaje}, se define otra medida. Mediante la comparación de ambos valores se estima en qué grado difiere la copresencia de dos personajes de lo que sería esperable, lo que arroja información sobre su relación escénica. Para esto, hay que hallar un valor que describa la  diferencia entre copresencia\index{copresencia escénica} real y esperada de los personajes $X_i$ y $X_j$, al que llamaremos $\lambda_{ij}$ (\ref{eq:11})
+
+\begin{equation}\label{eq:11}
+	\lambda_{ij} = n_{ij} - \bar{n}_{ij}
+\end{equation}
+
+
+Extraemos una medida en términos absolutos resolviendo la ecuación \ref{eq:11} de un personaje respecto a todos los demás y sumamos sus valores. Lo expresamos con la ecuación \ref{eq:12}.
+
+\begin{equation}\label{eq:12}
+	\sigma_{i} = \sum_{i \neq i}{\lambda_{ij}}
+\end{equation}
+
+Si $\lambda < 0$, los personajes concurren por debajo de lo predecible, lo que da pie a sospechar que el poeta evita su coincidencia por alguna razón. Lo contrario, si $\lambda > 0$, bien podría ser indicio de que la pareja tiene una relación especial. Ilustrémoslo volviendo a  nuestro ejemplo. Rosaura y Clarín coinciden en seis escenas, pero, atendiendo a lo anterior, $P_{\textsc{Ros},\textsc{Clar}} = 4{,}5$, lo que pone de relieve su cercanía ($\lambda_{\textsc{Ros},\textsc{Clar}}>0$). Por el contrario, si comprobamos lo esperado de Rosaura y Astolfo ($P_{\textsc{Ros},\textsc{Ast}} = 1{,}5$) con lo que realmente sucede ($\alpha_{\textsc{Ros},\textsc{Ast}} = 0 $), verificamos su distancia ($\lambda_{\textsc{Ros},\textsc{Clar}} < 0$). Solo en el caso de Clotaldo y Segismundo se cumple $\alpha_{ij} = P_{ij}$ ($\lambda_{\textsc{Ros},\textsc{Clar}} = 0$), lo que apunta a un posicionamiento escénico  neutro de un personaje respecto al otro. El valor de $\sigma$ da una idea de la implicación de un personaje en diferentes planos del conflicto, de manera que valores bajos sugieren una tendencia unilateral mientras que los valores altos apuntarían a una relación escénica presente en planos de conflicto. 
+
+\input{tables/lambda} 
+
+Lo visto ahora con pares de personajes se traslada a configuraciones escénicas complejas. Definimos $\varphi_i = f_i$ si $X_i \in M_s$ o $\varphi_i = 1 - f_i$ en caso contrario. Llamamos $p$ al número total de personajes y $M_s$ al conjunto de todos los que aparecen en la escena $s$.
+
+\begin{equation}
+	P_s \approx \prod_{i=1}^{p}  \varphi_i
+\end{equation}
+
+Volvamos a nuestro ejemplo de \textit{La vida es sueño} para ilustrar estas propuestas. A partir de una matriz de instancias de presencia escénica, como la de \Cref{fig:drama}, se establece la dominancia\index{dominancia escénica} de los personajes. Hasta aquí, habíamos considerado la matriz como si fuera booleana, con dos únicos valores posibles para cada celda: presente y ausente. Ahora introduciremos algunos matices. Además de considerar el tiempo en que los personajes están sobre el escenario, diferenciaremos los momentos en los que habla el propio personaje de aquellos en los que es otro el que pronuncia sus líneas. De esta manera, representamos la preponderancia del personaje dentro de la escena además de su presencia.
+
+\begin{figure}[!ht]
+	\centering\small
+	\input{figures/dramados}
+	\caption{Dominancia en la primera jornada.}
+	\label{fig:dramados}
+\end{figure}
+
+Nos hacemos una mejor idea si comparamos, por ejemplo, la relación entre el tiempo en que un personaje tiene la palabra respecto a los parlamentos\index{parlamento} que pasa en escena mientras hablan otros personajes\index{personaje} (\Cref{fig:dramados}). Cabe aquí preguntarse si todos los parlamentos tienen el mismo valor, pues cuantos más personajes pronuncien una línea, más se diluye la importancia que esta confiere a quien la declama. Lo apreciamos al final de la séptima escena, cuando todos los presentes piden primero a Basilio un heredero y, después, aclaman al monarca. En este caso, quien analice el texto debe tomar una decisión e incluir esos versos\index{verso} sin más, excluirlos del recuento o darles un valor ponderado. El texto procesado debe proporcionar la información para identificar estos parlamentos para actuar de una manera u otra.
+
+Podemos ir más allá de considerar la presencia y dominancia escénica\index{dominancia escénica} absoluta de un personaje si lo relacionamos con otros personajes, de manera que se establezca una red de asociaciones entre ellos\index{personaje}. Aquí, por ejemplo, parece claro que se repiten las relaciones que habíamos observado al analizar por escena, algo que revela una fuerte relación entre Rosaura y Clarín, lo que ya habíamos visto antes al ver las relaciones por escena. 
+
+\input{tables/drama}
+
+Si descendemos hasta el nivel de los parlamentos\index{parlamento}, es posible tener en cuenta distintas configuraciones. Por ejemplo, hasta que Clotaldo entra con los soldados en la tercera escena, hay tres parlamentos, uno de ellos recitado desde dentro. No consideraremos que estos están presentes y en silencio en ese intervalo, pero sí que Rosaura, Clarín y Segismundo callan mientras Clotaldo habla desde dentro.
+
+A la vista de esto, pensemos en cuántas de las anteriores tareas podría delegar el estudioso en el computador y el tiempo que eso le ganaría para concentrarse en la interpretación de los resultados.

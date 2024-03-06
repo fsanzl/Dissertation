@@ -1,0 +1,32 @@
+\begin{tikzpicture}[font=\footnotesize, domain=0:] %, every node/.style={fill, circle, inner sep = 1pt}]
+    \begin{axis}[
+    	 /pgf/number format/.cd,
+    	use comma,
+    	1000 sep={},
+      width = 0.8\textwidth,
+      axis lines = middle,
+      xmin=700,
+      xmax=2300,
+      ymin=200,
+      ymax=900,
+      ylabel style={at=(current axis.below origin), anchor=south, , yshift=-0.5cm},
+      x dir=reverse,
+      y dir=reverse,  
+      %label style={at=(current axis.below origin), anchor=south},
+      xlabel style={at=(current axis.left of origin), anchor=west, xshift=-0.5cm},
+      %xticklabel pos=right,
+      %ylabel near ticks,
+      % yticklabel pos=right,
+      enlargelimits = true,
+      xlabel={$F_2$},
+      ylabel={$F_1$}],
+    ]    
+    \node (i) at (2174,315) {\large$i$};
+    \node (e) at (1895,501) {\large$e$};
+     \node (a) at (1300,762) {\large$a$};
+    \node (o) at (966,501) {\large$o$};
+     \node (u) at (836,315) {\large$u$};
+    \end{axis}
+
+
+  \end{tikzpicture}

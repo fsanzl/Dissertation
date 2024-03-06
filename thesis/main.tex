@@ -1,0 +1,215 @@
+\documentclass[12pt,twoside,a4paper]{memoir}
+\raggedbottom
+\renewcommand{\footnoterule}{\vfill\kern -3pt \hrule width 0.4\columnwidth \kern
+	2.6pt}
+\usepackage{fontspec,xltxtra,xunicode}
+\usepackage{imakeidx}
+\indexsetup{level=\chapter*, toclevel=chapter, headers={\indexname}{\indexname}}
+\usepackage{afterpage}
+\usepackage{polyglossia}
+\setdefaultlanguage[variant=spanish]{spanish}
+\setmainlanguage[variant=spanish]{spanish}
+\setotherlanguage[spelling=new,babelshorthands=true]{german}
+\setotherlanguage[variant=british]{english}
+\usepackage{datetime2}
+\usepackage{csvsimple}
+\usepackage{amsmath,amssymb}
+\usepackage{unicode-math}
+\setmathfont{Latin Modern Math}
+\setmainfont[Ligatures=TeX,SlantedFont=*,SlantedFeatures={FakeSlant=0.2}]{CMU Serif}
+\setsansfont{CMU Sans Serif}
+\setmonofont{CMU Typewriter Text}
+\usepackage{icomma}
+\usepackage{slantsc}	
+%\nouppercaseheads 
+%\usepackage[toc,page]{appendix}
+\usepackage{textcomp}
+\usepackage{microtype}
+\usepackage{gb4e}
+\noautomath
+%\usepackage{quotchap}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{calc,plotmarks,decorations.text,shapes,matrix,positioning,fit,backgrounds,arrows.meta,shadows,ext.positioning-plus}
+\usepackage{tikz-qtree,tikz-qtree-compat}
+\usepackage{nonumonpart}
+\usepackage{multirow}
+%\usepackage{setspace}
+\usepackage{tabto}
+\usepackage{nowidow}
+\usepackage{url}
+%\urlstyle{same}
+%\def\UrlBreaks{\do\//\do-\do:}
+%\usepackage[hyphenbreaks]{breakurl}
+\usepackage{linegoal}
+\usepackage{multicol}
+\usepackage{hyphenat}
+\usepackage[artemisia]{textgreek}
+\usepackage{metrix}
+%\setmetrixvar{symbolshift}{-0.6em}
+\usepackage{scrbase}
+\usepackage{listings}
+%\usepackage{listingsutf8}
+
+\usepackage{bigdelim}%
+\usepackage{threeparttable}
+\usepackage[labelfont=bf]{caption}
+\usepackage{booktabs}
+
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage{subcaption}
+\usepackage{shapepar, varwidth}
+\usepackage{multicol}
+% Para Verbatim
+\usepackage{fancyvrb}
+%\defbibfilter{primary}{notkeyword=secondary}
+%x\defbibfilter{secondary}{keyword=secondary}
+\usepackage[spanish,onelanguage,plain, noend, ruled]{algorithm2e}
+
+%\usepackage{draftwatermark}
+%\SetWatermarkLightness{ 0.95 }
+%\SetWatermarkText{BORRADOR}
+%\SetWatermarkScale{  }
+
+
+\title{Ritmo y estructura de la comedia áurea: posibilidades y límites del análisis digital automático del teatro español clásico}
+\author{Fernando Sanz-Lázaro}
+\makeindex[intoc]
+
+\usepackage[edges]{forest}
+%
+% Bibliografía
+\usepackage[tools={manuscripts,bookinother,morenames},bibstyle=apa]{biblatex-multiple-dm}
+\usepackage[citestyle=apa,bibstyle=multiple-dm,backend=biber]{biblatex}
+\makeatletter
+\DeclareLanguageMapping{spanish}{spanish-apa}
+\renewcommand*{\apablx@ifrevnameappcomma}[2]{#2}
+\DefineBibliographyExtras{spanish}{%
+		\let\finalandcomma=\empty
+	\setcounter{smartand}{1}%
+	\let\lbx@finalnamedelim=\lbx@es@smartand
+	\let\lbx@finallistdelim=\lbx@es@smartand
+}
+\DeclareDelimFormat*{apadelim}{\addcomma\space}
+\renewbibmacro*{name:delim:apa:family-given}[1]{%
+	\ifnumgreater{\value{listcount}}{\value{liststart}}
+	{\ifboolexpr{
+			test {\ifnumless{\value{listcount}}{\value{liststop}}}
+			or
+			test \ifmorenames
+		}
+		{\printdelim{multinamedelim}}
+		{\lbx@finalnamedelim{#1}}}
+	{}}
+\makeatother
+
+\addbibresource{references.bib}
+% Acrónimos
+\usepackage{acro}
+\acsetup{first-style=short}
+\input{abreviaturas}
+
+% Hyperlinks
+\usepackage[hidelinks]{hyperref}
+\usepackage{bookmark}
+% Listas
+\setlength{\parindent}{0in}
+\nonzeroparskip
+%\usepackage{tipa}
+\usepackage{cleveref}
+\usepackage[babel]{csquotes}
+
+\usepackage{etoolbox}
+%\usepackage{lipsum} % just for dummy text
+\input{options}
+\input{fc}
+\usepackage{chngcntr}
+\counterwithout{footnote}{chapter}
+\OnehalfSpacing
+
+\makepagestyle{toc}
+\makeoddhead{toc}{\textit{Índice general}}{}{\thepage}
+\makeevenhead{toc}{\thepage}{}{\textsc{Índice general}}
+\renewcommand{\chaptermark}[1]{\markboth{%\thechapter.
+		\textsc{#1}}{}}
+		\def\sectionmark#1{\markright{#1}}
+\makepagestyle{mystyle}
+	\makeoddfoot{mystyle}{}{}{}
+	\makeevenfoot{mystyle}{}{}{}
+	\makeoddhead{mystyle}{\itshape\rightmark}{}{\thepage}
+	\makeevenhead{mystyle}{\thepage}{}{\scshape\leftmark}
+\begin{document}
+	\begin{sloppypar}
+    	\input{portada}	
+		\frontmatter
+			\setlength{\cftbeforechapterskip}{0pt}
+			\pagestyle{empty}
+			%\input{porta}\cleardoublepage
+			\input{dedicatoria}
+			%\input{frase}
+			\pagestyle{mystyle}
+			%\input{prefacio}
+			\input{agradecimientos}
+			\pagestyle{toc}
+			\tableofcontents*
+			\addtocontents{toc}{\protect\booltrue{specialtoc}}
+			\cleardoublepage
+			\pagestyle{mystyle}
+			\listoffigures
+			\cleardoublepage
+			\makeevenhead{mystyle}{\thepage}{}{\scshape Índice de cuadros}
+			\listoftables\cleardoublepage
+			\markboth{Índice de algoritmos}{Índice de algoritmos}
+			\makeevenhead{mystyle}{\thepage}{}{\scshape\leftmark}
+			\addcontentsline{toc}{chapter}{Índice de algoritmos}
+			\listofalgorithms\cleardoublepage
+			\markboth{Lista de abreviaturas}{Lista de abreviaturas}
+			\printacronyms[include=abbrev,name={Lista de abreviaturas}]
+			\addcontentsline{toc}{chapter}{Lista de abreviaturas}\cleardoublepage
+			\addtocontents{toc}{\protect\vspace{1.75ex}}
+		\mainmatter
+			\addtocontents{toc}{\protect\boolfalse{specialtoc}}
+			\input{intro}\label{chap:1}
+			\part{Fundamentos teóricos}
+				\input{ddhh}\label{chap:2}
+				\input{drama}\label{chap:3}
+				\input{fono}\label{chap:4}
+				\input{metro}\label{chap:5}
+			\part{Aplicación empírica}
+				\input{aclaraciones}\label{chap:6}
+				\input{dramacode}\label{chap:7}
+				\input{fonocode}\label{chap:8}
+				\input{metrocode}\label{chap:9}
+				\addtocontents{toc}{\protect\vspace{1.75ex}}
+			\bookmarksetup{startatroot}
+				\input{conclusio}\label{chap:10}
+			\begin{appendices}
+				\part*{Apéndices}\addcontentsline{toc}{part}{Apéndices}\partmark{Apéndices}
+					\chapter{Resúmenes}\label{chap:A}
+					\input{abstract}\cleardoublepage
+					\chapter{Listados de código}\label{chap:B}
+					\input{apendices}
+					\chapter{Ejemplos de uso}\label{chap:C}
+					\chaptermark{Análisis dramático cuantitativo manual}
+					\input{ejemplodeuso}
+					%\chapter{Nociones de programación}\label{chap:programming}
+					%\sectionmark{Nociones de programación}\label{nociones}
+					%\input{programacion}
+					\chapter{Análisis dramático cuantitativo manual}\label{chap:ejdram}
+					\input{ejdram}
+			\end{appendices}
+			\addtocontents{toc}{\protect\vspace{1.75ex}}
+		\backmatter
+			\bookmarksetup{startatroot}
+				\input{bibliografia}
+				\cleardoublepage
+				%\chaptermark{Índice alfabético}
+				%\markright{\indexname}
+				%\sectionmark{Índice alfabético}
+				%\printindex
+				%\cleardoublepage
+				%\input{colofon}
+				%\newpage\thispagestyle{empty}\strut\cleardoublepage
+	\end{sloppypar}
+\end{document}

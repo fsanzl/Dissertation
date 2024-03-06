@@ -1,0 +1,16 @@
+\begin{tikzpicture}
+	\node[datos] (input) {Datos no\\estructurados};
+	\node[module, below=0.5cm of input](I1) {Preparación};
+	\node[datos,right=1cm of I1] (semi) {Datos \\semiestructurados};
+	\node[module, below=0.5cm of semi](I2) {Tabulación};
+	\node[datos,right=1cm of I2] (est) {Datos \\estructurados};
+	\node[module, below=0.5cm of est](I3) {Análisis \\métrico};
+	\node[datos,right=1cm of I3] (output) {Texto \\procesado};
+	
+	\draw[->] (input)--(I1);
+	\draw[->] (I1)--(semi);
+	\draw[->] (semi)--(I2);
+	\draw[->] (I2)--(est);
+	\draw[->] (est)--(I3);
+	\draw[->] (I3)--(output);
+\end{tikzpicture}

@@ -1,0 +1,798 @@
+\chapter{Transcripción automática}
+\epigraphhead[50]{\epigraph{A las pronunciadas voces\\de blandas músicas junten\\sus no pronunciadas solfas\\las aves, siendo a su numen.}{Calderón, \textit{La nave del mercader}}}
+\section{Sobre la transcripción automática}
+\setcounter{exx}{0}
+Para poder analizar digitalmente los diálogos acercándonos a su declamación, su representación grafémica convencional se antoja insuficiente. Al contrario que el lector de carne y hueso, el computador es incapaz de inferir la prosodia a partir del texto si no se le indica explícitamente. La máquina lee lo que se le ordene leer y lo interpreta como se le haya instruido hacerlo. Lo ideal sería olvidarnos de los textos y recurrir a grabaciones de calidad tomadas durante puestas en escena de las obras que deseemos examinar, tanto mejor si son recitadas por actores\index{actor} bregados en la interpretación de textos áureos. A partir de esas grabaciones podríamos extraer y estudiar la representación de las ondas sonoras. Sin embargo, la grabación proporcionaría la mejor descripción posible del sonido de \textit{cada} función, por lo que sus resultados solo serían totalmente válidos para sus respectivos casos \parencite[12]{sanchez2017}; otro elenco de actores, un nuevo director de escena o, incluso, las variaciones en la forma de entender el personaje tras representarlo un par de veces, conducirían a cambios en la entonación. Podríamos entonces tomar varias muestras diferentes, pero esto dispararía los recursos requeridos hasta hacer inasumible un estudio extenso.
+
+Otro inconveniente que se plantearía a la hora de componer un corpus sería la necesidad impuesta por el material disponible, ya que este se limita a aquellas funciones de las que existe una grabación y esta es accesible. Como dijimos, la idea de la lectura distante\index{lectura distante} es, sin embargo, el examen del bosque y no de los árboles más altos. Y, si únicamente una mínima parte de piezas están editadas adecuadamente, un reducidísimo porcentaje de estas se lleva a las tablas. De esas representaciones, las que han sido grabadas son una minoría y, de esa minoría, solamente un porcentaje ínfimo se encuentra al alcance del público. Afortunadamente, hay un máximo común divisor entre interpretaciones, en el que todas las lecturas fieles concuerdan, por lo que no es necesario llegar a este de forma inductiva. Al contrario, el acuerdo de mínimos es el propio texto fijado. Nos adaptaremos, pues, a las condiciones a las que nos enfrentamos y nos conformaremos con el texto escrito, un modelo del objeto real. Como en todo modelo, hay elementos que se pierden, pero esto permite también concentrarse en los otros, los que hemos seleccionado. En nuestro caso, los fonológicos, a despecho de los sonidos auténticos de la representación.
+
+En una función hay actores\index{actor} que median entre el texto escrito y lo que escucha el público. Esto es, los actores \textit{interpretan} el texto. Leen la grafía asumiendo que responde a unas reglas dadas y la pronuncian aplicando a lo que ven un conjunto de operaciones que han aprendido de antemano. Estas operaciones las desconoce el computador \textit{a priori}. Por suerte, el texto escrito según la ortografía normativa contiene casi toda la información necesaria para pronunciarlo, siempre y cuando se conozcan sus convenciones y las reglas que dictan como llevar a cabo la traducción. La ecuación $algoritmos + estructuras\: de\: datos = programas$ que da título a una obra clásica de la ciencia informática \parencite{wirth1976} sintetiza esta situación: la ortografía y la sintaxis española definen la forma en que se estructuran los datos de entrada, pero debemos definir los algoritmos que empleamos para tratarlos.
+
+Estas operaciones se corresponden a las reglas de la fonología\index{fonología}, que el usuario competente de la lengua maneja orgánicamente y sin reparar en ello. Nuestra labor consiste en formalizarlas en una biblioteca informática que funcione de manera autónoma. Esto es, el programa principal importará un módulo de esta biblioteca en el que delegará la transcripción fonológica, de forma que, una vez introducida la cadena de texto a transcribir, recibe de vuelta su transcripción, aun sin ver lo que sucede entre bambalinas. Eso permitiría teóricamente sustituir este módulo por otro sin necesidad de modificar el programa principal, de modo que, ante la eventualidad de una solución mejor, sería trivial reemplazar la nuestra.
+
+Al comenzar a trasladar los elementos teóricos a código, este módulo formaba parte integral de las funciones propias de la escansión. Sin embargo, poco tiempo después, se plantearon otros usos ajenos al originario, por lo que hubo que decidir entre reutilizar fragmentos del código en un programa nuevo independiente o externalizar los algoritmos de transcripción fonológica. Dado que la modularidad es una enorme ventaja a la hora de encontrar fallos, hacer modificaciones o añadir mejoras, optamos por lo segundo. Este desarrollo independiente también ha propiciado la introducción de nuevas funcionalidades que no se requieren en la investigación principal, pero que resultan de gran ayuda para otros fines, como la transcripción fonética y la transliteración a otras codificaciones. No obstante, además incluye funcionalidades orientadas exclusivamente a la lírica áurea, como la marcación de posibles haches aspiradas. La implementación en Python\index{Python} del módulo que detallamos en este capítulo está disponible de forma independiente como en la biblioteca \texttt{fonemas} \parencite{sanz2021sa} y \texttt{silabeador} \parencite{sanz2021sb}, cuyas versiones más recientes a fecha de publicación de estas páginas se encuentran en \Cref{list:fonemas}.
+
+\section{Módulo transcriptor}
+\subsection{Descripción general}
+A grandes rasgos, el mecanismo consiste en tomar una cadena de caracteres y separarla en una lista, cada uno de cuyos elementos es una consonante, una vocal o una unión de vocales en caso de diptongo\index{diptongo} o triptongo\index{triptongo}. Después se recorre la lista para distribuir las consonantes en torno a los núcleos silábicos vocálicos. Finalmente, se establece la posición del acento prosódico de conformidad a las reglas ordinarias del español.
+
+Gracias a este diseño modular, desde la perspectiva del procedimiento de escansión, la función transcriptora se reduce a un operador que recibe un verso y devuelve la transcripción de sus sílabas. Sin embargo, para llegar a ese resultado se requiere llevar a cabo una serie de procesos bajo la mesa para manipular el texto hasta dejarlo en su forma final. Simplificando los detalles del proceso, este consiste en aplicar reglas de transformación de primitivas a la cadena grafémica y, una vez transformada esta, invocar un módulo de división silábica para que separe las sílabas. En las siguientes líneas examinaremos cómo hemos construido el módulo de transcripción fonética (\Cref{list:importfon}), recorriendo paso a paso los procesos de transcripción y silabación. 
+
+El programa requiere algunas funciones de bajo nivel para operar. Parte de ellas las provee el propio lenguaje de programación, mientras que otras específicas tenemos que definirlas nosotros primero para poder usarlas después. Por lo tanto, antes de todo, hemos de preparar el entorno para que disponga de cuanto vayamos a necesitar. De ahí que las primeras instrucciones carezcan de una finalidad operativa. Estas sirven para componer las estructuras de datos que requeriremos para llevar a cabo la transformación. Atendiendo a esto, importaremos funciones de los diversos módulos que vayamos a requerir: en la implementación real, serían procedimientos específicos; aquí, el buen entendimiento que aporta el lector al asumir pasos implícitos.
+
+\begin{algorithm}[!ht] %or another one check
+	\caption{Definiciones previas de la biblioteca.}\label{list:importfon}
+	\Importar{$Bibliotecas$}\;
+	\Fclase{\Valoresp{}}{
+		\word \gets\ $\{\}$\;
+		\slbs \gets\ $\{\}$\;
+	}
+\end{algorithm}
+
+
+La \textit{clase}\footnote{En programación orientada a objetos\index{programación!orientada a objetos}, una \textit{clase} es una plantilla para crear instancias de una estructuras de datos (\textit{objetos}) a partir de unos valores iniciales. La clase describe variables (\textit{atributos}) y procedimientos (\textit{métodos}) para operar sobre estas.} de datos la requerimos para definir los valores que tomarán los \textit{atributos} del \textit{objeto} que representa el texto transcrito. Denominaremos a esta clase \Valoresp, y la dotaremos de dos atributos, válidos para los distintos tipos de transcripción que llevamos a cabo.  Cada uno de estos atributos contiene dos valores, que definimos como sendas listas vacías $palabras$ y $s\acute{\imath}labas$, cuyos elementos son palabras y sílabas transcritas, respectivamente.  Una vez disponemos de los módulos que requeriremos y definida la clase\index{clase} auxiliar que sirve de plantilla para los valores, tenemos lo necesario para empezar con la clase principal.
+
+\subsection{Definición de la clase de transcripción}
+
+Como se observa en el \Cref{list:transcriptionheader}, esta clase acepta un argumento \footnote{La implementación en Python admite además cuatro argumentos opcionales mpara alterar el comportamiento de la transcripción cuando las circunstancias así lo aconsejan, de forma que disponemos así de una herramienta flexible para usar en casos particulares.}. La clase \texttt{Transcripción} tiene asimismo cuatro atributos y cuatro métodos públicos que pueden emplearse sin restricciones en programas externos. El argumento obligatorio es el propio texto que deseamos transcribir. A este lo denominaremos $texto$ en la clase, y espera recibir una cadena de caracteres Unicode\index{Unicode}, sea en español o su transcripción en el \ac{afi}.
+
+\begin{algorithm}[!ht] %or another one check
+	\caption{Cabecera del módulo de transcripción.}\label{list:transcriptionheader}
+	 \Fclase{\Transcripcion{$texto$}}{
+	 	\texto \gets \Limpia{$texto$} \;
+	 	\lIf{reordenar}{\texto \gets\  \Reordena{$texto$}}
+	 	\fonologia \gets\ \FNL{$texto$} \;
+	 	\fonetica \gets\ \FNT{$fonologia$} \;
+	 	\sampa \gets\  \SAMPA{$fonetica$} \;
+	 }
+\end{algorithm}
+
+Respecto a los atributos de la clase \texttt{Transcripción}, todos ellos deben ser accesibles desde el exterior. El primer atributo es $texto$, que almacena la cadena de caracteres resultante de preprocesar la entrada con los métodos descritos en \Cref{met:letters}. El atributo $fonolog\acute{\imath}a$ es el resultado de aplicar el método \texttt{TranscripciónFonológica}\index{fonología} al texto de entrada. Este contiene una instancia de la clase \Valoresp, que ya habíamos definido, y su contenido serán sendas listas de palabras y sílabas transcritas según el \ac{afi}. El atributo $fon\acute{e}tica$\index{fonética} se obtiene mediante la aplicación del método \texttt{TranscripciónFonética} al valor del atributo $fonolog\acute{\imath}a$. Como este, es una instancia de la clase \Valoresp, por lo que también contendrá subatributos $palabras$ y $s\acute{\imath}labas$, pero, en este caso, lo que almacena las transcripciones fonéticas del texto. Finalmente, el atributo $sampa$ es la salida del método \texttt{TransliteraciónSAMPA} cuando se le pasa el contenido de $fon\acute{e}tica$. Al igual que los dos atributos precedentes, contiene una instancia de \Valoresp con los subatributos $palabras$ y $s\acute{\imath}labas$, aunque con su transcripción al \acl{sampa} (SAMPA). 
+
+\subsection{Excurso \Roman{excurso}: Argumentos de la implementación en Python}\stepcounter{excurso}
+En la implementación en Python\index{Python}, incluimos los argumentos opcionales para indicar si las palabras monosilábicas han de marcarse con símbolo de sílaba tónica (/ˈ/ en \ac{afi}) o no. Esto es, \textit{eres tú} se resuelve por defecto como \textipa{/ˈeRes tu/}, aunque puede forzarse a \textipa{/ˈeRes ˈtu/} si así se lo indicamos. Lo hacemos mediante una variable de tipo booleano que está inicializada por defecto como $falso$. Si creamos una instancia de la clase de transcripción indicando que el valor de  ese argumento es $verdadero$, forzamos el comportamiento contrario al predefinido. En cualquier caso, aquí consideramos tan solo la sílaba acentuada de cada palabra hasta que, más adelante, el análisis morfosintáctico permita identificar los acentos prosódicos\index{acento!prosódico}. En la discusión que sigue lo obviaremos por ser irrelevante en el aspecto teórico.
+
+El programa de Python ofrece la posibilidad de señalar explícitamente las haches a comienzo de palabra. Si bien la aspiración ya se había perdido en Castilla entrado el siglo \textsc{xvii} \parencite[91.3]{lapesa2008}, esta sobrevivía en hablas dialectales \parencite{salvador1982} —como lo eran las de muchos dramaturgos—, pero también en la poética como herramienta de compensación métrica. Por este motivo, conviene marcar la posición de las haches de manera que, en caso de varios hiatos posibles, la posible aspiración tenga valor determinante para inclinarse por esa sílaba. Se ha diseñado como una característica opcional para facilitar la transcripción de textos modernos, que no requieren de esta funcionalidad. De nuevo, ignoramos la capacidad de elegir de la que hemos dotado a la prueba práctica y marcaremos por defecto las haches iniciales para tenerlas en cuenta para valorar sinalefas. 
+
+Otra opción es la capacidad de alterar la posición de los fonemas consonánticos en coda a final de palabra si la siguiente sílaba es vocálica, de manera que se evitan sílabas trabadas donde sea posible. De esta forma, si lo ponemos a $verdadero$, \textit{dos uno} se interpretará como /doˈsu.no/ en lugar de /dosˈu.no/. Esto responde a una cuestión fonética más que fonológica y no afecta a la calidad de los fonemas ni a su posición fonémica absoluta, sino únicamente a su posición relativa respecto a la serie silábica. En ciertas circunstancias puede resultar útil, pero no lo consideraremos aquí.
+
+En el diseño para el uso en un escenario real, hemos tenido que introducir asimismo modificaciones más prácticas. Una de ellas es la opción de elegir el carácter que representa el acento primario en la transliteración \ac{sampa}. Esto responde a la necesidad de guardar en ocasiones los resultados en archivos en un archivo \ac{csv}, acrónimo de \textit{Comma Separated Values}. Este formato permite organizar información al modo tabular de una hoja de cálculo en texto plano, de manera que cada línea corresponde a una fila, cuyas columnas se separa una coma. En caso de que los valores de un campo lleven comas, estos se entrecomillan para indicar que todo cuanto se encuentre entre las comillas ha de interpretarse literalmente. \ac{sampa} emplea comillas dobles para señalar la posición de las sílabas tónicas, que, en un archivo \ac{csv}, se interpretan como una la apertura de una cadena de caracteres literal. Por esta razón, resulta necesario introducir un símbolo alternativo cuando se desea guardar información en un archivo de este tipo.
+
+La implementación de Python también ofrece la posibilidad de decidir el comportamiento del programa ante una \textit{s} líquida. Esta función responde a la frecuencia con que se dan eses líquidas en los textos, sobre todo en fragmentos latinos intercalados, lo que hace necesario, por lo menos, tener en consideración su existencia. Estos casos se resuelven reinterpretando la consonante como coda de una vocal /e/ protética\index{epéntesis}.
+
+\subsection{La \textit{s} líquida}
+Aunque en la implementación de Python\index{Python} damos la posibilidad de desactivar la funcionalidad de solucionar esto observando la fonotáctica española, para la explicación daremos por sentada esta estrategia. La \textit{s} líquida es aquella en que /s/ aparece en ataque de la sílaba inicial seguida inmediatamente de consonante. Si bien era habitual en latín, desapareció en su evolución a algunas de las lenguas romances, el español entre ellas.  Los préstamos que la emplean, se resuelven mediante un /e/ protésica ante la \textit{s}. Este segmento gana carácter silábico, por lo que la sílaba inicial se desdobla \parencite[165]{claveria2018}.
+
+¿De qué forma afecta este elemento al análisis de dramas del Siglo de Oro? Como decíamos, existen numerosas instancias de eses líquidas en los textos. Dado que los editores críticos de cada caso han optado por hacer una excepción en la modernización ortográfica y conservar la ortografía original, cabe pensar que esta decisión podría responder a un criterio fonológico.  Esto es, el verso \textit{spíritu ha de lograrla} del Ejemplo \ref{ex:spiritu4} se resolvería conforme a la edición como \textipa{/ˈspi.Ri.tu ˈa de lo.ˈgRaR.la/}, que, tras encontrar los acentos prosódicos, quedaría como $\{\acute{\imath},i,u,\acute{a},e,o,\acute{a},a\}$. Por el contrario, si introducimos una \textit{e} epentética,  la transcripción será \textipa{/esˈpi.Ri ˈtwa de lo.ˈgRaR.la/}, sus núcleos vocálicos se organizarían de la manera $\{e,\acute{\imath},i,\acute{a},e,o,\acute{a},a\}$ una vez hechas las sinalefas pertinentes. Estas dos soluciones producirían patrones rítmicos diferentes, \texttt{+--+--+-} y \texttt{-+-+--+-}.
+
+La cuestión se torna más apremiante al considerar que, en muchas obras, se intercalan fragmentos latinos, a los que la ese líquida no es ajena, al contrario que sucede con su presencia en el español. ¿Debemos asumir que se conserva una ese líquida culta en las obras teatrales a imitación del modelo latino? Veamos los ejemplos que proporciona nuestro corpus de autos sacramentales, donde encontramos las siguientes instancias de ese líquida antecediendo a /p/ y /t/ o /k/:
+
+\begin{exe}
+	\ex\begin{xlist}
+		\ex\label{ex:splendor}sin que una alba splendor de otra alba sea\\\strut\hfill(Calderón, \citetitle[17]{calderon_mariacorazon})		
+		\ex\label{ex:spiritu}del Spíritu) toda\hfill(v. 179)	
+		\ex\label{ex:splendor1}el spíritu encomiendo.\hfill(v. 1296)	
+		\ex\label{ex:spiritus}los spíritus (¡qué ahogo!)\hfill(v. 1319)
+		\ex\label{ex:stella}Ave, maris stella\hfill(v. 1481)	
+		\ex\label{ex:spiritui}Spiritui Santo\hfill(v. 1517)
+	\end{xlist}
+	\ex\begin{xlist}
+		\ex\label{ex:spiritu1}Spíritu de Dios era\strut\hfill(\citetitle[246]{calderon_pernaso})	
+		\ex\label{ex:spiritual}el dulce spiritual\hfill(v. 551)	
+		\ex\label{ex:spiritual1}del spiritual manjar\hfill(v. 883)	
+		\ex\label{ex:spiritu2}Spíritu de consuelo.\hfill(v. 1207)
+		\ex\label{ex:speravi2}In te, Domine, speravi,\hfill(v. 1237)
+		\ex\label{ex:scitura}carear estos dos testos de Scritura,\hfill(v. 1510)
+		\ex\label{ex:spiritu3}Yo un nuevo spíritu en este\hfill(v. 1984)
+	\end{xlist}
+	\ex\label{ex:speravi}In te, Domine, speravi,\strut\hfill(\citetitle[2200,2202]{calderon_fernando2})
+	\ex\label{ex:splendor2}su splendor se presume\strut\hfill(\citetitle[302]{calderon_curaenfermedad})
+	\ex\label{ex:scena}a la imaginada scena\strut\hfill(\citetitle[354]{calderon_redencioncautivos})
+	\ex\label{ex:spiritu4}spíritu ha de lograrla,\strut\hfill(\citetitle[1738]{calderon_espigasruth})
+	\ex\label{ex:splendor3}te da el splendor divino\strut\hfill(\citetitle[796]{calderon_alimentoshombre})
+\end{exe}
+Aunque la mayoría de los casos mostrados arriba permiten una resolución aceptable mediante poco más que jugar con las sinalefas y las diéresis\index{diéresis}, en (\ref{ex:spiritu}) necesitamos la epéntesis para alcanzar el heptasílabo, que es como los versos colindantes aconsejan escandirlo. Por ese motivo, resulta apropiado disponer de la opción de intercalar una vocal antes de la ese líquida.
+
+Más dificultad plantea el caso de (\ref{ex:spiritual}). Aquí debemos contar ocho sílabas, por lo que, si hacemos la epéntesis, se plantea la dicotomía de no hacer sinalefa\index{sinalefa} en \textit{dulce espiritual}, forzando un hiato\index{hiato} entre dos vocales iguales, ambas átonas, o recurrir a la diéresis\index{diéresis} en \textit{espiritual}, lo que además sería su pronunciación regular. Esta última posibilidad se antoja más plausible, por lo que el verso no ofrece pistas sobre la epéntesis, pues no influiría en la resolución. En (\ref{ex:spiritual1}) encontramos el caso contrario: si hacemos epéntesis, debemos diptongar \textit{espiritual} para que el verso siga siendo octosílabo. El ritmo aporta poca ayuda, ya que ambas soluciones serían \texttt{----+--}. La solución no epentética ˈ\textipa{/del spi/} implicaría el préstamo fonológico latino. La otra ordenación posible, \textipa{/dels pi/} también es ajena a la fonología española, donde /ls/ en coda se da exclusivamente en préstamos y nunca en interior de palabra.
+
+En cuanto a la pronunciación latina, tenemos (\ref{ex:stella}), (\ref{ex:spiritui}) y (\ref{ex:speravi}). En los dos primeros casos nos hallamos ante hexasílabos cantados y ante un octosílabo en el último. El octosílabo aporta poco a la discusión, pues la sinalefa provocaría que el verso se resolviera exactamente igual con o sin epéntesis, por lo que discutiremos los otros dos. El ejemplo (\ref{ex:stella}) es un verso cantado por los músicos, y debe leerse en consonancia con la pronunciación latina para concordar con el verso posterior \ref{ex:stellapos}, así como con los siguientes parlamento de los músicos (\ref{ex:celli} y \ref{ex:stellapospos}).
+
+\begin{exe}\ex\begin{xlist}
+		\ex Dei mater alma\strut\hfill(Calderón, \citetitle[1482]{calderon_mariacorazon})\label{ex:stellapos}
+		
+		\ex\label{ex:celli}Atque semper virgo,\\felix celli porta.\hfill(vv. 1485-1486)
+		
+		\ex Summens illud Ave\\Gabrielis ore.\hfill(vv. 1489-1490)\label{ex:stellapospos}
+	\end{xlist}
+\end{exe}
+El verso \ref{ex:spiritui} es ambiguo, por prestarse a la resolución tanto mediante epéntesis como diéresis\index{diéresis}. En este último caso, no obstante, obligaría a acentuar la vocal cerrada, provocando un acento antirrítmico. Parece más probable que de nuevo se alcance el metro valiéndose de la epéntesis. De esta manera, la estrategia protésica se antoja la solución más cabal a este tipo de palabras, trátense de voces españolas o no.
+
+No hay que descartar, sin embargo, que puedan darse casos en los que se prefiere la pronunciación latina. Véase por ejemplo el siguiente ejemplo en \ref{ex:caribdis}, que, aun sin proceder de una obra teatral, obliga a tomar precauciones:
+
+\begin{exe}\ex\label{ex:caribdis}En Scilas ni en Caribdis no repara\\\strut\hfill(Cervantes, \citetitle[Lib. 1, cap. 9]{cervantes2004})
+\end{exe}
+
+En situaciones como esta, posponemos la resolución hasta el ajuste métrico, dejando abierta la posibilidad de eliminar la epéntesis y emplear la pronunciación latina si lo demanda el verso para obtener el recuento silábico apropiado. No obstante, en el caso del teatro, en el que la declamación se aproxima más al habla corriente que en la lírica —sea siquiera porque  la mayor cantidad de versos dificultan esmerarse tanto en cada uno como se haría, por ejemplo, con los catorce versos de un soneto—, cabría plantearse hasta qué punto el actor\index{actor} tendería a resolver un verso semejante forzando la pronunciación latina en lugar de añadir una sílaba supernumeraria atendiendo a la fonología española.
+
+\subsection{Preprocesado}\label{met:letters}
+El preprocesado tiene como meta eliminar, enmendar y expandir caracteres. Por una parte, elimina del texto todos aquellos caracteres no alfabéticos que se encuentren en él. Por otro lado, deletrea los nombres de las consonantes en caso de encontrar una como un grafema aislado, de manera que transcriba \textit{letra b} no como \textipa{/ˈletRab/} sino como \textipa{/ˈletRa ˈbe/}. Finalmente, translitera diacríticos ajenos al repertorio del español. Para llevar a cabo la tarea definimos la función que describimos en \Cref{list:preprocesado}. Esta recibe como entrada el texto que deseamos preparar y lo devuelve preprocesado.
+
+En primer lugar, definimos las equivalencias entre los grafemas consonánticos y su deletreo, lo que en \Cref{list:preprocesado} hemos llamado $letras$. La finalidad de esto es instruir al computador para tratar consonantes aisladas que encuentre en el texto, como en \ref{ex:abc}, pues la máquina ignora la pronunciación; si no le indicamos que haga una excepción, tomará la consonante aislada como un grafema y no como el nombre de una letra, por lo que la sustituirá por el fonema correspondiente. Salvo en el caso de las vocales, esto produciría palabras monofonemáticas consonánticas, ajenas por completo a la fonología española\index{consonante}. Dicho de otro modo, si encuentra \textlangle{}b\textrangle{} sin contexto ha de tratarlo como \textlangle{}be\textrangle{} y si da con \textlangle{}h\textrangle{}, como \textlangle{}hache\textrangle{}. Para evitarlo, deletreamos el nombre de cada letra no vocálica cuando aparece una consonante aislada y hacemos una sustitución si es menester.
+
+\begin{exe}
+	\ex	\label{ex:abc}
+	El abecé del marido.\\
+	La A, quiere decir hacer\\
+	La B significa bobo\\
+	La C, callar; atended:\\
+	«hacerte bobo y callar» ,\\
+	¿qué os parece el abecé?\\\strut\hfill(Mira de Amescua, \citetitle[177-182]{mira_pastoresbelen})
+\end{exe}
+
+Excluiremos no obstante \textlangle{}y\textrangle{}, dado que en su valor de conjunción tiene pronunciación vocálica monofonemática. En el corpus no hemos encontrado ningún ejemplo de su uso literal como letra, valga la redundancia, mientras que su uso conjuntivo es extensivo, por lo que optamos por considerar únicamente la transcripción vocálica del grafema. Si ocurriera un caso que requiriese la transcripción \textipa{/ˈiˌgRje.ga/}, la transcripción /i/ que empleamos obligaría a resolver el verso con entre una y dos sílabas de menos respecto a las reales, dependiendo de la distribución de las sinalefas\index{sinalefa}, por lo que se evidenciaría la irregularidad del metro, lo que facilitaría sobremanera su localización y corrección manual.
+
+\begin{algorithm}[!ht] %PREPROCESADO
+	\caption{Módulo de preprocesado.}\label{list:preprocesado}
+	\Fclase{\Limpia{texto}}{
+		\letras \gets\ $\{a, b, c, d, ...\}$\;
+		\deletreo \gets\  $f: \{(grafema_{1}, deletreo_{1}), ..., (grafema_{n}, deletreo_{n})\}$\;
+		\simbolos \gets\  $f: \{s\acute{\imath}mbolo_{1}, ..., s\acute{\imath}mbolo_{n}\}$\;
+		\diacriticos \gets\  $f: \{(diacr\acute{\imath}tico_{1}, transliteraci\acute{o}n_{1}), ..., (diacr._{n}, transl._{n})\}$ \;
+		\texto \gets\  \Minuscula{$texto$} \;
+		\ForEach{$car\acute{\imath}cter\:\in\:deletreos$}{
+			\If{$letras_{i} \:\nsucc\:car\acute{a}cter\:\nsucc\ letras_{j}$}{
+				\caracter \gets\  $deletreos_{car\acute{a}cter}$ \;
+			}
+		}
+		\Return{texto}
+	}
+\end{algorithm}
+
+Algunos caracteres pueden transcribirse de forma directa a su equivalente fonológico. En concreto, esto es posible si grafema\index{grafema} y fonema son homógrafos o si el fonema no tiene equivalente grafémico. Por eso transcribiremos directamente algunos grafemas a su fonema, mientras que otros han de conservar momentáneamente la representación grafémica para no alterar transformaciones posteriores. De esta manera, escribimos \textlangle{}haʧe\textrangle{}, pues el grafema \textlangle{}a\textrangle{} existe como fonema y se corresponde biunívocamente con este. Por el contrario, el grafema \textlangle{}r\textrangle{} puede representar \textipa{/R/} o \textipa{/r/} si está duplicado. Esto desaconseja alterarlo previamente. El grafema \textlangle{}ch\textrangle{} tiene también correspondencia biunívoca con el fonema /ʧ/. Al no existir el grafema \textlangle{}ʧ\textrangle{} en el repertorio del español, no hay reglas posteriores que le afecten y lo transcribiremos \textlangle{}haʧe\textrangle{}, sin que afecte a operaciones ulteriores. La \textit{h} inicial, no obstante, hemos de conservarla para decidir más adelante si la marcamos como posible aspiración.
+
+A continuación, creamos una lista de signos ortográficos de puntuación\index{puntuación} que llamaremos $s\acute{\imath}mbolos$. Al carecer de equivalente fonemático, no se necesita definir una transformación para cada uno, pues todos ellos serán reemplazados por un elemento vacío. En previsión de diferentes estilos ortotipográficos —tanto aceptados como no—, debemos incluir todas las variaciones posibles. Por ejemplo, comillas españolas e inglesas, tanto rectas como rizadas, simples y dobles. También, grafías irregulares de la raya ortográfica  (—) y el guion  (-). Hemos comprobado que la fidelidad a las prescripciones académicas \parencite[373]{rae2010} varía notablemente de un texto a otro, por lo que, además de los susodichos símbolos, hemos incluido la raya intermedia\footnote{Aunque no es propia del español, se usa extensivamente en inglés (\textit{en dash}) y en alemán (\textit{Halbgeviertstrich}), por lo que no es extraño encontrar ocasionalmente este símbolo reemplazando la raya española en ediciones poco cuidadas.} {(–)}.
+
+Seguidamente, tratamos grafemas\index{grafema} ajenos a la ortografía española o aquellos que, formando parte del repertorio castellano, se hallan modificados por un símbolo diacrítico extraño a este. Para ello definimos de nuevo las equivalencias entre los caracteres con diacrítico foráneo y su transliteración según las normas de la ortografía  española. No es raro hallar ediciones que emplean diacríticos\index{diacrítico} y ligaturas\index{ligatura} de diversas lenguas, como el alemán (\ref{ex:de}), el catalán (\ref{ex:cat}), el italiano en Lope (\ref{ex:it}) o el latín (\ref{ex:lat}).
+\begin{exe}
+	\ex\begin{xlist}
+		\ex\label{ex:de}El húngaro a Nördlingen\\\strut\hfill(Calderón, \citetitle[113]{calderon_blason})		
+		\ex\label{ex:cat}¿Què voleu? Les paradetas\strut\hfill(\citetitle[1868]{calderon_pintordeshonra})
+		\ex\label{ex:lat}mutans Evæ nomen\strut\hfill(\citetitle[1494]{calderon_mariacorazon})
+		\ex\label{ex:pt}porque el gran Luis de Camões\\\strut\hfill(\citetitle[106]{calderon_secretoagravio})
+		\ex\label{ex:it}Un seculo e più, segnora,\strut\hfill(Lope de Vega, \citetitle[3054]{vega_anzuelofenisa})
+	\end{xlist}
+\end{exe}
+
+Estos símbolos diacríticos\index{diacrítico} poco comunes pueden darse incluso en palabras patrimoniales españolas, sea por una ortografía arcaizante o por una cuestión editorial. De esta manera, dependiendo de la edición, se encuentran acentos circunflejos en sustitución de un dígrafo vocálico con reducción fonética (\ref{ex:espant1}), el anticuado acento grave (\ref{ex:espant2}) o la no menos antigua cedilla (\ref{ex:espant4}), al lado de la habitual diéresis\index{diéresis} editorial mediante crema para señalar un hiato\index{hiato} (\ref{ex:espant3}).
+\begin{exe}
+	\ex\begin{xlist}
+		\ex\label{ex:espant1}hoy vengo buscándôs: basta\strut\hfill(Calderón, \citetitle[61]{calderon_amarmuerte})\\
+		decirle que crêr en Dios.\strut\hfill(v. 549)
+		\ex\label{ex:espant2}Conmigo à un tiempo y con ella,\strut\hfill(\citetitle[1868]{calderon_pintordeshonra})
+		\ex\label{ex:espant4}A ti te pareçe eso,\strut\hfill(\citetitle[1005]{calderon_diablomudo})	\ex\label{ex:espant3}te parece que Dïana,\strut\hfill(\citetitle[484]{calderon_verdaderodiospan})
+	\end{xlist}
+\end{exe}
+La solución pasa por la transliteración\index{transliteración}, cuyo caso general consiste simplemente en eliminar el diacrítico. No obstante, debemos considerar algunas excepciones. El acento grave suele indicar una sílaba tónica tanto en otras lenguas como en grafías anticuadas del español, salvo en el caso de palabras monografémicas. Así pues, primero los grafemas \textlangle{}à\textrangle{} y \textlangle{}ò\textrangle{} por  \textlangle{}a\textrangle{} y \textlangle{}o\textrangle{} cuando van orlados por espacios en blanco, y todos los demás casos por su equivalente con acento agudo.
+
+Las ligaturas\index{ligatura} pueden o bien desdoblarse en dos grafemas, por lo que representarían dos sílabas ortográficas, o bien transliterarlas al grafema del repertorio español que represente el sonido más cercano. Tradicionalmente, \textlangle{}æ\textrangle{} ha dado el diptongo /je/ o /e/ (considérese \textit{cielo} y \textit{celestial}, ambas voces procedentes del latín \textit{cælus}), como vimos en el ejemplo \ref{ex:celli}.
+
+En caso de encontrar diéresis\index{diéresis}, diferenciaremos entre las editoriales y las ortográficas. Para las primeras, sustituimos por el grafema sin símbolo diacrítico y añadimos un guion bajo precediendo a la vocal para señalar más tarde al módulo de división silábica que ahí ha de romper el diptongo. Finalmente, reemplazamos el grafema \textlangle{}ç\textrangle{} por \textipa{/T/}, pues su pronunciación anterior \textipa{/\texttoptiebar{ts}/} debía de haber completado la desafricación ya en la segunda mitad del siglo \textsc{xvi} \parencite[92.4]{lapesa2008}. En caso de que la diéresis proceda de un extranjerismo, se trata indistintamente, asumiendo que se translitera como una de las cinco vocales españolas y no como un diptongo o un fonema ajeno a la fonología española.
+
+Ahora ya disponemos de las descripciones de los elementos que emplearemos para hacer las sustituciones. Por una cuestión de eficiencia, convertimos el texto a minúsculas antes de empezar a sustituir. De otra manera, estaríamos obligados a evaluar cada vez si estamos ante una variación mayúscula o minúscula de una misma letra. Esto duplicaría el tiempo de la operación, lo que podría resultar perceptible cuando se procesa una gran cantidad de texto, como es frecuente en nuestro caso. Con el texto en minúscula, cada letra está representada por un único grafema y no se da este problema.
+
+La primera de las series de sustituciones consiste en recorrer las claves de $letras$ y, si encuentra una ocurrencia de una de ellas que no esté orlada a izquierda y derecha por otras letras, estamos ante una consonante aislada, por lo que procedemos a sustituir las ocurrencias de esa letra solitaria en el texto por el valor de la clave correspondiente.
+\[x \longrightarrow f(x)\;/\; \emptyset \_\ \emptyset\]
+
+A continuación recorremos la lista de símbolos y sustituimos las ocurrencias  de sus elementos en el texto por un espacio en blanco. De esta manera tenemos únicamente palabras.
+\[x \longrightarrow \emptyset\]
+
+
+Para finalizar introduciremos los casos de \textit{e} epentética. Sustituimos \textlangle{}s\textrangle{} en posición inicial de palabra siempre que no vaya seguido por una vocal.
+\[\text{s} \longrightarrow \text{e}, \text{s}\;/\; \emptyset \_ {\scriptstyle\langle{}-VOC\rangle{}}\]
+Tras realizar estas operaciones, el método devuelve la cadena de caracteres transformada.
+
+\subsection{Excurso \Roman{excurso}: Reordenación}\stepcounter{excurso}
+El segundo de los métodos de preprocesado lo contemplamos como idea para la traducción computacional de los algoritmos vistos aquí. Se emplea si el argumento para reordenar del programa de Python se ha puesto deliberadamente a $verdadero$. Para la escansión no lo utilizaremos, salvo que necesitemos afinar con una agrupación silábica fonológica, ya que los núcleos vocálicos permanecen constantes. El objeto es, pues, proporcionar unas herramientas tan flexibles como podamos producir y, para ello, como en este caso, intentamos adelantarnos a las necesidades de los hipotéticos beneficiarios de la biblioteca.
+
+\begin{algorithm}[!ht] %or another one check
+	\caption{Módulo de reordenación.}\label{list:reordena}
+	\Ffuncion{\Reordena{texto}}{
+		\vocales \gets $\langle vocales\rangle$\;
+		\ForEach{$posici\acute{o}n_{i} \in\:texto$}{
+			\cuenta \gets $\lvert posici\acute{o}n_{i}\rvert$ \;
+			\If{$i \neq 0\:\wedge \lvert posici\acute{o}n_{n-1}\rvert > 1$}{
+				\If{$posici\acute{o}n_{i}\:\text{\empiezacon}\:vocales$}{
+					\If{$posici\acute{o}n_{i-1}\:\text{\neg \acabacon}\:vocales$}{
+						$\posicion_{i}$ \gets\ $posici\acute{o}n_{i-1, n} + posici\acute{o}n_{i}$ \;
+						$\posicion_{i-1}$ \gets\ $posici\acute{o}n_{i-1} -\:posici\acute{o}n_{i-1, n}$ \;
+					}
+				}
+			}
+		}
+		\Return{texto}
+	}
+\end{algorithm}
+
+En \Cref{list:reordena} vemos cómo se lleva a cabo. Tomamos el texto y empezamos a recorrerlo por sus sílabas. Queremos comprobar si la sílaba correspondiente a cada iteración no es la primera del texto, esto es, si existe una sílaba precedente plurifonemática cuya coda es redistribuible. De cumplirse todas las condiciones, nos aseguramos de que la sílaba que estamos examinando empiece por vocal y la anterior acabe por consonante, en cuyo caso procederemos a reubicar la última consonante de la coda de la sílaba precedente en el ataque de la sílaba actual. 
+
+\subsection{Transcripción fonológica}\label{met:fnl}
+Con el texto de entrada dispuesto, se aborda la transcripción fonológica\index{fonología}. Esta se produce mediante las tablas y reglas de sustitución del método \texttt{TranscripciónFonológica}, cuyas primeras líneas vemos en el \Cref{list:transcriptionfnl}. Toma como argumento una variable $texto$, además de heredar una instancia de la clase \texttt{TranscripciónFonológica}. El argumento $texto$ es una copia del texto a transcribir. 
+
+\begin{algorithm}[!ht] %FNL
+	\caption{Método de transcripción fonológica.}\label{list:transcriptionfnl}
+	\Fmetodo{\FNL{texto}}{
+		\diacriticos \gets\  $f: \{diacr\acute{\imath}tico_{1}: transliteraci\acute{o}n_{1}), ..., diac._{n}: transl._{n}\}$\;
+		\consonantes \gets\  $f: \{grafema_{1}: fonema_{1}, ..., grafema_{n}: fonema_{n}\}$\;
+		\texto \gets\ \erre{texto}\;
+		\If{aspiración}{
+			\texto{$\langle h\rangle$} \gets  $marca, \forall \emptyset \succ h \in texto$\;
+		}
+		\texto{$consonantes_{c}$} \gets $consonantes_{v}, \forall consonantes_{c} \in texto$\;
+	}
+\end{algorithm}
+
+Antes de empezar a modificar el texto, definimos una tabla de sustitución de grafemas con diacrítico y su equivalente sin este. Para ello, nos valemos de un \textit{diccionario}, como especificamos el tipo de datos consistente en un conjunto de pares \textit{clave}\index{diccionario!clave}, \textit{valor}\index{diccionario!valor}. La clave nombra al elemento y el valor, como su propio nombre indica, es el contenido que asignamos al elemento nombrado por la clave. De esta manera, creamos claves con todos los grafemas vocálicos con símbolo diacrítico y les damos como valor su equivalente sin diacrítico. Por ejemplo, $\{\acute{a}: a, \grave{a}: a, ..., \ddot{u}: u\}$. Se incluye de manera adicional la raya baja, pues la emplearemos para señalar hiatos\index{hiato} en caso de diéresis\index{diéresis}. Al no ser esta más que una marca diacrítica, no le corresponde fonema alguno.
+
+Definimos un segundo diccionario para los sonidos consonánticos. Este también tiene un grafema o una combinación grafémica como claves, pero sus valores son sus respectivos fonemas equivalentes en la forma $\{v: b, z: \theta, qu: k, ...\}$. Al contrario que el diccionario anterior, este contiene combinaciones fonológicas para tener en cuenta el contexto, de modo que crearemos dos claves distintas $ce$ y $ca$, a las que asignaremos además valores diferentes $\theta e$ y $ka$. Las claves deben seguir un orden específico que refleje cómo deben ser aplicadas las transformaciones. Por ejemplo, en el caso de \textlangle{}j\textrangle{},  $x$ debe preceder a $j$ en el diccionario. De lo contrario (\ref{ex:xj}), estaríamos ante una transformación errónea, pues si transforma primero $j$, al llegar a la siguiente, se encontraría con caracteres $x$ que corresponderían tanto al grafema \textlangle{}x\textrangle{} como al fonema /x/.
+
+\begin{exe}
+	\ex\label{ex:xj}\strut\hfill\begin{tabular}{ l|*{3}{c}} 
+		entrada: &  \multicolumn{1}{|c|}{a} &  \multicolumn{1}{|c|}{j} &  \multicolumn{1}{|c|}{o} \\ 
+		$\text{j} \longrightarrow \text{x}$ &   &  \uparrow& \\
+		&   \multicolumn{1}{|c|}{a} &  \multicolumn{1}{|c|}{x} &  \multicolumn{1}{|c|}{o}\\
+		$\text{x} \longrightarrow \text{ks}$ &   &   \uparrow &  \\
+		salida: &   \multicolumn{1}{|c|}{a} &  \multicolumn{1}{|c|}{ks} &  \multicolumn{1}{|c|}{o} \\
+	\end{tabular}\hfill\strut
+\end{exe}
+
+Las sustituciones comienzan por el grafema \textlangle{}r\textrangle{}\index{consonante!vibrante} cuando le corresponde el fonema /r/. Dado que el mismo símbolo se emplea para el grafema correspondiente a \textipa{/R/}, sustituimos los grafemas de /r/ por el carácter \texttt{R}, esto es, detrás de \textlangle{}n\textrangle{}, \textlangle{}n\textrangle{} o \textlangle{}s\textrangle{} o a comienzo de palabra, o si \textlangle{}r\textrangle{} aparece duplicado.
+
+\[\text{r} \longrightarrow \text{R}\;/\; \Bigg\{\begin{smallmatrix} \text{\normalsize{n}} \\ \text{\normalsize{l}} \\ \text{\normalsize{s}} \\ \emptyset\end{smallmatrix}\Bigg\} \_\]
+\[\text{r}, \text{r} \longrightarrow \text{R} \]
+
+A continuación comprobamos si existen instancias de del grafema \textlangle{}h\textrangle{} a comienzo de palabra. De ser así, las sustituimos por una marca en lugar de hacerlas desaparecer como las interiores. Esto tiene por objetivo advertir de la presencia de esta hache, de manera que pueda tenerse en cuenta después a la hora de predecir una potencial aspiración. Seguidamente, recorremos las claves del diccionario $consonantes$ y, cuando alguna de ellas aparece en el texto, sustituimos todas sus instancias por el valor de la clave correspondiente. Esto, sin embargo, no es suficiente para tratar las transformaciones en su totalidad porque \textlangle{}y\textrangle{} y \textlangle{}g\textrangle{} presentan particularidades de tal cariz que hacen necesario un tratamiento específico (\Cref{list:fonemay}).
+
+\begin{algorithm}[!ht] %Y
+	\caption{Caso de \textlangle{}y\textrangle{}.}\label{list:fonemay}
+	\texto{\textlangle\text{y}\textrangle} \gets  $/i/, \forall \emptyset\nsucc\langle y\rangle\nsucc\emptyset \in texto$\;
+	\texto{$\langle y\rangle$} \gets $/j/, \forall \langle y\rangle\nsucc\emptyset \in texto$\;
+	\texto{$\langle y\rangle$} \gets $/\textsl{ʝ}/, \forall \langle y\rangle \in texto$\;
+	\texto{$diacr\acute{\imath}ticos_{v} + /\textsl{ʝ}/$} \gets  $diacr\acute{\imath}ticos_{c}/i/,$\\ \Indp
+	$\forall diacr\acute{\imath}ticos_{v} + /\textsl{ʝ}/\nsucc\emptyset, diacr\acute{\imath}ticos_{v} \in \{\langle\acute{a}\rangle, \langle\acute{e}\rangle, \langle\acute{\imath}\rangle, \langle\acute{o}\rangle, \langle\acute{u}\rangle\}$\;\Indm
+	\consonantes \gets\ $f: consonantes$\;
+	\texto{$/\textsl{ʝ}/$} \gets $/i/, \forall /\textsl{ʝ}/ + consonantes_{n} \in texto$\;
+\end{algorithm}
+
+En el caso de que detectemos que el texto contiene el grafema \textlangle{}y\textrangle{}, se sustituyen todas las ocurrencias aisladas de esta, correspondientes a la conjunción, por /i/. Si aparece a final de palabra, se considera como semiconsonante parte de un diptongo decreciente, por lo que se reemplaza por /j/. En los demás casos, se cambia a /ʝ/.
+
+\[\text{y} \longrightarrow \text{i}\;/\;\emptyset \_ \emptyset\]
+\[\text{y} \longrightarrow \text{j}\;/\; \_ \emptyset\]
+\[\text{y} \longrightarrow \text{ʝ}\]
+
+El paso siguiente consiste en tomar las claves con acento agudo del diccionario $diacr\acute{\imath}ticos$ para sustituir su valor  —esto es, la vocal sin acento— en el texto por la vocal acentuada si la vocal precede a a /ʝ/ a final de palabra.
+
+\[\Bigg\{\begin{smallmatrix}\text{\normalsize{a}}\\\text{\normalsize{e}}\\\text{\normalsize{i}}\\\text{\normalsize{o}}\\\text{\normalsize{u}}\end{smallmatrix}\Bigg\}, \text{ʝ} \longrightarrow \Bigg\{\begin{smallmatrix}\text{\normalsize{á}}\\\text{\normalsize{é}}\\\text{\normalsize{í}}\\\text{\normalsize{ó}}\\\text{\normalsize{ú}}\end{smallmatrix}\Bigg\}, \text{i} \;/\;  \_ \emptyset\]
+
+Para finalizar el tratamiento excepcional de \textlangle{}y\textrangle{}, se comprueba que no se ha introducido accidentalmente /ʝ/ seguido de consonante y, de ser así, se reemplaza por \textlangle{}i\textrangle{}.
+
+\[\text{ʝ} \longrightarrow \text{i} \;/\; ⎄\_ {\scriptstyle\langle{}+CONS\rangle{}}\]
+
+El segundo grafema que tratamos de manera excepcional es \textlangle{}g\textrangle{}\index{consonante!velar}, ya que este puede representar los fonemas /g/ y /x/ dependiendo del contexto. Para ello, confirmamos en primer lugar si este aparece en $texto$ para, de darse tal circunstancia, emprender los pasos oportunos para su tratamiento (\Cref{list:fonemag}).
+
+\begin{algorithm}[!ht] %Y
+	\caption{Caso de \textlangle{}g\textrangle{}.}\label{list:fonemag}
+	\debiles \gets $\:f: \{e, i\}$ \;
+	\fuertes \gets $\:f: \{a, o, u\}$ \;
+	\If{$\langle g\rangle\in texto$}{
+		\texto{$\langle g\rangle + d$} \gets $\langle x\rangle + d, \forall \langle g\rangle + d \in texto, \forall d \in d\acute{e}biles$ \;
+		\texto{$\langle gu\rangle + d$} \gets $\langle g\rangle + d, \forall \langle g\rangle + d \in texto, \forall d \in d\acute{e}biles$ \;		
+		\texto{$\langle g\ddot{u}\rangle + d$} \gets $\langle gw\rangle + d, \forall \langle g\ddot{u}\rangle + d \in texto, \forall d \in d\acute{e}biles$ \;
+		\texto{$\langle gu\rangle + f$} \gets $\langle gw\rangle + f, \forall \langle gu\rangle + f \in texto, \forall f \in fuertes$ \;
+	}
+\end{algorithm}
+
+En este caso, se procede primero a asignar el fonema /x/ a los grupos \textlangle{}ge\textrangle{} y \textlangle{}gi\textrangle{} y /g/ a \textlangle{}gue\textrangle{} y \textlangle{}gui\textrangle{}. Consideramos más allá de las formas canónicas de \textlangle{}e\textrangle{} e \textlangle{}i\textrangle{} e incluiremos sus variaciones diacríticas.
+\[
+\text{g} \longrightarrow \text{x} \;/\; \_
+\Big\{
+\begin{smallmatrix}\text{\normalsize{e}}\\\text{\normalsize{i}}\end{smallmatrix}\Big\}\]
+\[
+\text{g},\text{u} \longrightarrow \text{g} \;/\; \_ 
+\Big\{
+\begin{smallmatrix}\text{\normalsize{e}}\\\text{\normalsize{i}}\end{smallmatrix}\Big\}
+\]
+Para completar \textlangle{}g\textrangle{}, abordamos los casos en los que va seguido de  \textlangle{}u\textrangle{} con o sin diéresis. 
+\[
+\text{g}, \text{ü}\longrightarrow \text{g}, \text{w} \;/\; \_
+\Big\{
+\begin{smallmatrix}\text{\normalsize{e}}\\\text{\normalsize{i}}\end{smallmatrix}\Big\}\]
+\[
+\text{g},\text{u} \longrightarrow \text{g}, \text{w} \;/\; \_ 
+\Big\{
+\begin{smallmatrix}\text{\normalsize{a}}\\\text{\normalsize{o}}\end{smallmatrix}\Big\}
+\]
+
+Con esto habríamos terminado prácticamente de transcribir los caracteres grafémicos en fonológicos. No obstante, quedan algunos diacríticos vocálicos que necesitamos para dividir el texto en palabras, que es precisamente de lo que se ocupan las líneas finales del método (\Cref{list:fnlreturn}). Esta división pasa por invocar al método \texttt{DivideVariables} (\Cref{list:dividevariables}), pasándole como argumentos $texto$. Este crea una instancia de la clase \Valoresp, que asignamos a la variable $transcripci\acute{o}n$ —enseguida entraremos en detalle en su modo de operar—. Para finalizar, como ya no son necesarios los símbolos diacríticos una vez termina la división silábica, los sustituimos por las formas canónicas en $transcripci\acute{o}n$ antes de devolver este objeto como salida.
+
+\begin{algorithm}[!ht] %Y
+	\caption{Caso de \textlangle{}y\textrangle{}.}\label{list:fnlreturn}
+	\transcripcion \gets \DivideVariables{$texto$} \;
+	\transcripcion{$diacr\acute{\imath}ticos_{c}$} \gets $diacríticos_{v}$ \;
+	\Return{transcripción}
+\end{algorithm}
+
+
+\section{Métodos auxiliares de la transcripción}
+\subsection{División entre palabras y sílabas}
+Como hemos dicho, para transcribir fonológicamente empleamos el método \texttt{DivideVariables}. Este, a su vez, delega algunas de sus tareas en otros. Veamos primero el mecanismo general del método y, cuando lo tengamos, entremos en sus componentes, de una manera parecida a lo que acabamos de hacer con \texttt{TranscripciónFonológica}. Primero de todo, definimos las variables $palabras$ y  $s\acute{\imath}labas_{texto}$, que son las listas donde iremos almacenando todas las palabras y las sílabas del texto —debemos diferenciarla de la variable $s\acute{\imath}labas_{palabra}$, en la que almacenaremos las sílabas de una palabra cada vez—. Hecho esto, empezamos a iterar por los componentes que resultan de dividir el texto en una lista con las palabras de las que se compone.
+
+Comprobamos si la palabra que estamos evaluando es un adverbio en \textit{-mente}\index{adverbio!{en -mente}@{en -\textit{mente}}}. Para ello, verificamos en primer lugar que esa sea efectivamente su terminación y que tenga más de cinco letras. Si este es el caso, guardamos en las variables $s\acute{\imath}labas$ y $t\acute{o}nica$ los resultados del método \texttt{Silabación} si le pasamos la raíz de la palabra, —esto es, excluyendo \textit{-mente}—. Trataremos \texttt{Silabación} por ahora como una caja negra, en la que introducimos la palabra por un extremo y sacamos del otro sus sílabas, sin preocuparnos de lo que sucede internamente para que esto ocurra; dejaremos para más adelante la descripción analítica de su mecanismo (\Cref{sec:silabeador}). Retomando el hilo, si la palabra es \textit{claramente}, aplicamos la silabación a \textit{clara}. Con las sílabas almacenadas en $s\acute{\imath}labas$, evaluamos el tamaño de esta variable.
+
+\begin{algorithm}[!ht] %or another one check
+	\caption{Creación de variables para sílabas y palabras.}\label{list:dividevariables}
+	\Ffuncion{\FSub{texto}}{
+		\words \gets $\{\}$ \;
+		$\nsilabas_{texto}$ \gets $\{\}$ \;
+		\ForEach{$palabra \in texto$}{
+			\If{palabra \acabacon $\langle mente\rangle\:\wedge\:\lvert palabra\rvert > 5$}{
+				\nsilabas, \ton \gets \silabacion{$ra\acute{\imath}z$}\;
+				\If{$\lvert s\acute{\imath}labas_{palabra}\rvert > 1$}{
+					$\nsilabas_{palabra}$ \gets\ $s\acute{\imath}labas_{palabra} +\{\text{ˈ}men,te\}$ \;
+					\ton \gets\ $t\acute{o}nica - 2$
+				}
+			}
+			\Else{\slbs, \ton \gets \silabacion{$palabra$}}
+			$\nsilabas_{palabra}$ \gets \diptonga{$palabra, s\acute{\imath}labas_{palabra}$}\;
+			$\nsilabas_{palabra^{+\textsc{ton}}}$ \gets $\langle\textsc{ˈ}\rangle +s\acute{\imath}labas_{palabra^{+\textsc{ton}}}$ \;
+			\word \gets $\emptyset$ \;
+			$\nsilabas_{texto}$ \gets $\acute{\imath}labas_{texto} + s\acute{\imath}labas_{palabra}$ \;
+			\words \gets $palabras + palabra$ \;
+		}
+		\Return{\Valoresp{$palabras, s\acute{\imath}labas_{texto}$}}
+	}
+\end{algorithm}
+
+Si el resultado tiene más de una sílaba, dejamos el acento secundario y les añadiremos las sílabas de \textit{mente} también con su correspondiente acento \index{acento!secundario} primario. La posición del acento secundario la hallaremos restando las dos sílabas de \textit{mente} a $t\acute{o}nica$, lo que dará la posición contando desde la última sílaba hacia la primera. Por el contrario, si la raíz es monosilábica, asumimos que la palabra es llana y la resolvemos concatenándole  $\{\textsc{ˈ}men,te\}$ con un único acento, el primario, e indicando que este se ubica en la penúltima sílaba. Si, por el contrario, no nos encontramos ante una palabra acabada en \textit{-mente}, hallamos su división silábica de manera directa y almacenamos las sílabas sin modificar en $s\acute{\imath}labas_{palabra}$ y la posición de la sílaba tónica en $t\acute{o}nica$.
+
+Definimos ahora la identificación de los diptongos\index{diptongo}. Para abordarlos, se llama al método \texttt{Diptongos} —que veremos en detalle después (\Cref{list:diphthongs})—, con $palabra$ y $s\acute{\imath}labas_{palabra}$ y  como argumentos. Este devuelve una lista de sílabas reevaluadas en función de las reglas de diptongación, que se asignan a $s\acute{\imath}labas$, reemplazando su valor previo. La variable $t\acute{o}nica$, obtenida anteriormente, se emplea para marcar la sílaba donde recae el acento en la posición correspondiente de la variable $s\acute{\imath}labas$. Como el contenido de $palabra$ ya no es necesario en esta iteración, se reinicializa para volver a usar la variable de nuevo en la próxima palabra del texto\footnote{En la demostración en Python\index{Python}, se quitarían las marcas acentuales de los monosílabos en función de lo que se le haya indicado explícitamente al programa.}.
+
+El bucle que recorría las palabras termina añadiendo al final de $s\acute{\imath}labas_{texto}$ los elementos de  $s\acute{\imath}labas_{palabra}$ y $palabra$ tras el último elemento de  $palabras$.  Hecho esto, la función devuelve un objeto de la clase \Valoresp, cuyos atributos son $palabras$ y  $s\acute{\imath}labas_{texto}$.
+
+\subsection{Diptongos}
+
+El último de los métodos auxiliares es \diptonga\index{diptongo} (\Cref{list:diphthongs}), como su propio nombre indica, es el encargado de abordar las uniones vocálicas intrasilábicas. Este recibe el argumento $s\acute{\imath}labas$. Nótese que su función no es determinar la división silábica, de lo que se encarga el módulo externo de silabación, sino de sustituir los fonemas correspondientes a un vocoide\index{vocoide} por los símbolos adecuados, según les corresponda, para eliminar ambigüedades. Este pequeño y sencillo paso desempeña un papel crucial, pues la corrección del resultado determinará más adelante el análisis de ciertos fenómenos prosódicos.
+
+\begin{algorithm}[!ht] %or another one check
+	\caption{Manejo de diptongos.}\label{list:diphthongs}
+	\Ffuncion{\diptonga{sílabas}}{
+		\ForEach{sílaba$_{n} \in$ sílabas}{
+			\If{$\text{vocales}_{n} \succ \text{débil} \wedge \text{débil} \succ \text{vocales}_{n}$}{
+				$\silaba_{n,\text{débil}}$ \gets $\text{sílaba}_{n,\text{débil}}^{-\textsc{sil}}$}
+		}
+		\Return{sílabas}
+	}
+\end{algorithm}
+
+El procedimiento es sencillo: recorremos todas las sílabas y, si encontramos dos vocales seguidas, intentamos sustituir la vocal alta por su equivalente semivocálico o semiconsonántico. Primero probamos por la izquierda\index{semiconsonante}, en consideración de la tendencia del español a los diptongos crecientes \parencites{alarcos1964}{navarrotomas2004}{quilis2019}, y después por la derecha\index{semivocal}. Hechas las sustituciones en la variable $s\acute{\imath}laba$, esta reemplaza el valor inicial.
+\[ \Big\{\begin{smallmatrix}\text{\normalsize{i}}\\\text{\normalsize{u}}\end{smallmatrix}\Big\} \longrightarrow \Big\{\begin{smallmatrix}\text{\normalsize{j}}\\\text{\normalsize{w}}\end{smallmatrix}\Big\}\;/\; \_  {\scriptstyle\textlangle{}+VOC\textrangle{}} \]
+\[ \Big\{\begin{smallmatrix}\text{\normalsize{i}}\\\text{\normalsize{u}}\end{smallmatrix}\Big\} \longrightarrow \Big\{\begin{smallmatrix}\text{\normalsize{j}}\\\text{\normalsize{w}}\end{smallmatrix}\Big\}\;/\; {\scriptstyle\textlangle{}+VOC\textrangle{}} \_  \]
+
+\subsection{Transcripción fonética}\label{met:fnt}
+Aunque la transcripción fonética\index{fonética} no es completamente imprescindible para llevar a cabo los pasos posteriores en el análisis métrico, hemos incluido un modelo de esta por completitud. No nos detendremos, por tanto, a examinar con detenimiento cada detalle, pero sí pretendemos mostrar la idea general subyacente. Como se ve, \texttt{TranscripciónFonética} es menos complejo que su equivalente para la transcripción fonológica. Esto se debe, en gran medida, a que el transcriptor fonético se basa en este, pues el único parámetro que admite es el objeto de transcripción fonológica que devuelve (\Cref{list:fnt}). En realidad, apenas se ocupa de hacer de intermediario entre un objeto de la clase \Valoresp y la función de sustitución más detallada \texttt{SustituciónFonética} que veremos de inmediato (\Cref{list:fsubstitute}). En concreto, \texttt{TranscripciónFonética} separa las dos listas que conforman un objeto de la clase $fonolog\acute{\imath}a$ y las convierte a cadenas de caracteres para, seguidamente, crear una nueva instancia de la clase \Valoresp con los resultados de tratar cada una de esas cadenas de caracteres con el método \texttt{SustituciónFonética}.
+
+\begin{algorithm}[!ht] %or another one check
+	\caption{Transcripción fonética.}\label{list:fnt}
+	\Fmetodo{\FNT{fonología}}{
+		palabras \gets \sustF{\une{fonología.palabras}}\;
+		sílabas \gets \sustF{\une{fonología.sílabas}}\;
+		\Return{\Valoresp{palabras, sílabas}}
+	}
+\end{algorithm}
+
+Las sustituciones comienzan de forma secuencial en $palabras$. Reemplazamos todos los fonemas oclusivos\index{consonante!oclusiva} sonoros por sus respectivos alófonos aproximantes\index{consonante!aproximante} —esto es, \textipa{[B]}, \textipa{[D]} \textipa{[G]}—, por ser esta su realización más habitual. Seguidamente, aquellos casos en los que vayan precedidos de una consonante nasal\index{consonante!nasal} o pausa, en el caso de /d/ también lateral\index{consonante!lateral}, se asigna el alófono\index{alófono} oclusivo\index{consonante!oclusiva}. Después de esto, se sonorizan las fricativas si van precedidas de consonante sonora. Para finalizar, se define el diccionario $al\acute{o}fonos$ de entornos fonémicos y su realización fónica, con pares como $\{(nb,mb), (nf,\textit{\textsc{ɱ}}f), (nk,\text{\textit{ŋ}}k), ...\}$. Se recorre el diccionario y, cada vez que se encuentra una ocurrencia de alguna clave del diccionario, se sustituye esta por su valor. Si encontramos $nb$, lo sustituiremos por $mb$, si hallamos $nf$, lo cambiaremos por $\textit{\textsc{ɱ}}f$, y así de manera sucesiva hasta completar todas las sustituciones posibles.
+
+\begin{algorithm}[!ht] %or another one check
+	\caption{Sustituciones fonológico-fonéticas.}\label{list:fsubstitute}
+	\Ffuncion{\sustF{transcripción}}{
+		\trans{$i$} \gets $al\acute{o}fonos_i, \forall i \in transcripci\acute{o}n$\;
+		\alos \gets $f:\{(entorno_{1}, al\acute{o}fono_{1}), (entorno_{2}, al\acute{o}fono_{2}),...\}$\;
+		\trans{$j$} \gets $al\acute{o}fonos_{j}, \forall j \in transcripci\acute{o}n$\;}
+	\Return{transcripción}
+\end{algorithm}
+
+Con esto tenemos la transcripción fonética codificada en una cadena de caracteres con las sílabas separadas por guiones, por lo que ya solo resta crear una lista con sus sílabas.
+
+\subsection{Excurso \Roman{excurso}: Transliteración \ac{afi}-\ac{sampa}}\label{met:ipa2sampa}\stepcounter{excurso}
+Para permitir la utilización del transcriptor en otros entornos, hemos incluido en la realización para Python\footnote{En ocasiones, los algoritmos aquí mostrados requieren una adaptación adicional al computador por motivos más técnicos que lógicos. Por ejemplo, la traducción a Python para la demostración requirió asignar a la variable $ipa$ copias explícitas de las variables. Los atributos de la clase reaccionaban no como los valores de las variables sino punteros a dichas variables. Por lo tanto, si no se hacía esta asignación de copias, el método terminaba modificando los valores del atributo de la clase que le pasamos como argumento, con el resultado de que perdíamos la transcripción fonética en el \ac{afi}.} una función para traducir de \ac{afi} a \ac{sampa} (\Cref{list:ipasampa}). Aunque no empleamos esta última notación para desarrollar los algoritmos, la transformación ilustra como se traduce entre diferentes formatos, por lo que hemos considerado que tiene sentido incluirlo aquí.
+
+\begin{algorithm}[!ht] %or another one check
+	\caption{Transliteración IPA-SAMPA.}\label{list:ipasampa}
+	\Ffuncion{\SAMPA{transcripción}}{
+		\trans $\gets f: \{(ipa_{1}, sampa_{1}), (ipa_{1}, sampa_{1}), ...\}$\;
+		\transcripcion{i} \gets $al\acute{o}fono_i, \forall i \in transcripci\acute{o}n$\;
+		\alos \gets $f:\{(entorno_{1}, al\acute{o}fono_{1}), (entorno_{2}, al\acute{o}fono_{2}),...\}$\;
+		\transcripcion{j} \gets $entorno_j, \forall j \in transcripci\acute{o}n$\;
+		\Return{transcripción}
+	}
+\end{algorithm}
+
+La piedra angular de este método es el  diccionario $transliteraci\acute{o}n$. Sin seguir un orden concreto, no es más que una serie de fonemas cuya representación en el \ac{afi} difiere de \ac{sampa}. Usamos los primeros como clave y les asignamos como valor su equivalente \ac{sampa}. Para acabar, se recorre el diccionario haciendo las sustituciones en el texto en instancias que se correspondan con claves del diccionario.
+
+\section{Módulo silabeador}\label{sec:silabeador}
+\subsection{Sobre la división silábica}
+La división silábica se lleva a cabo mediante un módulo externo específico para la tarea\index{biblioteca!Silabeador}. Como vimos cuando hablábamos de modularidad, esto permitiría reemplazarlo por otro que realizara la misma función de diferente forma. Al contrario que la biblioteca de transcripción fonológica, que era parte integral del módulo de escansión y se separó posteriormente de este, la biblioteca de división silábica se concibió desde el origen como una pieza aparte. El motivo es que, en principio, consideramos delegar la tarea en una biblioteca externa. Sin embargo, durante las primeras pruebas, se observa que las herramientas disponibles no tienen en consideración las excepciones vistas en \Cref{sec:irregularidades}, lo que redunda en la precisión general. Por ese motivo, decidimos crear nuestro propio módulo de silabación que tuviera en cuenta dichas irregularidades. Demostró ser una decisión afortunada, a la luz de la evaluación de la precisión (\Cref{sec:silpres}).
+
+Dado que las aplicaciones del módulo no se limitan a este trabajo en concreto, tiene sentido distribuirlo como una biblioteca aparte sin obligar a usarla junto al transcriptor. Por este motivo, en la implementación de Python\index{Python} introdujimos la opción de modificar el comportamiento de serie, de manera que la silabación pueda adaptarse a distintas necesidades. Esta versión para usos diversos (\Cref{list:silabeador}) se encuentra disponible en línea tanto el paquete listo para su instalación directa como su código fuente \parencite{sanz2021sb}. La instalación, al igual que la de Fonemas\index{biblioteca!Fonemas}, se hace de manera sencilla mediante el gestor de paquetes de Python\index{Python}.
+
+\subsection{Funcionamiento práctico del transcriptor}
+Podemos ver el resultado más en detalle en el código, empezando por \Cref{list:silabeador1}. La biblioteca es autosuficiente hasta cierto punto, pues, incluso en su versión de Python\index{Python}, se limita a importar la biblioteca estándar de expresiones regulares\index{expresión regular}. La clase de silabación propiamente dicha toma una palabra y genera dos atributos, $s\acute{\imath}labas$ y $t\acute{o}nica$ mediante la aplicación secuencial de diversos métodos a la palabra que hemos introducido. Aquí debemos definir también dos categorías, $vocales$, que contiene fonemas\footnote{La implementación en Python da la opción de aplicar la división silábica a textos grafémicos, por lo que, además, incluiría mayúsculas y sus variantes puntuadas. El computador las considera caracteres diferentes y, de no indicarle de manera explícita que las incluya, no las tendría en cuenta.} vocálicos con todas sus variedades diacríticas posibles, y $cerradas$, con una lista de las vocales altas, así como sus respectivos alófonos no silábicos\footnote{Por claridad, en los bloques algorítmicos no haremos distinción en los vocoides\index{vocoide} entre semivocales\index{semivocal} y semiconsonantes\index{semiconsonante}, por lo que usaremos indistintamente /w/ y /j/ para representar ambos alófonos.}.
+
+Tomamos $palabra$ y la modificamos para marcar en el texto excepciones de forma explícita. En la implementación en Python, como con las opciones de la transcripción, también puede desactivarse esta función de manera que la división silábica ignore las excepciones y las trate atendiendo a su ortografía.
+
+Primero, \texttt{HacerExcepciones} señala las excepciones descritas en \Cref{sec:irregularidades} para que se tengan en cuenta en la silabación. El resultado volvemos a modificarlos mediante \texttt{Latín}. Este método se encarga de buscar términos latinos con morfemas incompatibles con las reglas de acentuación del español.
+
+ Tenemos el texto preparado, de manera que está marcado explícitamente dónde ha de hacerse una excepción al dividir las sílabas y se ha añadido acentuación explícita a algunos latinismos. Aplicaremos el método de división silábica \texttt{Silabea} y almacenaremos el resultado en el atributo $s\acute{\imath}labas$. Procesando este atributo mediante el método \texttt{EncuentraTónica}, hallamos la sílaba acentuada, cuya posición asignamos al atributo $t\acute{o}nica$.  
+
+\begin{algorithm}[!ht] %or another one check
+	\caption{Cabecera del módulo silabeador.}\label{list:silabeador1}
+	\SetKwFunction{silabacion}{Silabación}	\SetKwFunction{HacerExcepciones}{HacerExcepciones}
+	\SetKwFunction{Latin}{Latín}\SetKwFunction{EncuentraTonica}{EncuentraTónica}\SetKwFunction{Silabea}{Silabea}
+	\SetKwData{}{}\SetKwData{}{}\SetKwData{}{}\SetKwData{}{}\SetKwData{}{}\SetKwData{}{}
+	\Fclase{\silabacion{palabra}}{
+		vocales \gets $f:\{a,e,i,o,u, \acute{a}, \acute{e}, ...\}$\;
+		\cerradas \gets $f:\{i,u, j, w\}$\;
+		\word \gets\ \HacerExcepciones{palabra}\;
+		\word \gets\ \Latin{palabra}\;
+		\slbs \gets\ \Silabea(palabra)\;
+		\ton \gets\ \EncuentraTonica(sílabas)
+	}
+\end{algorithm}
+
+Veamos como el módulo lleva a cabo el tratamiento de las excepciones.  El método \texttt{HacerExcepciones} toma primero las palabras ambiguas \parencite{dominguez2012} y las divide. Nótese que en la implementación física hay que indicarle de forma explícita al módulo que haga esto, pues tiene sentido solamente si, como en nuestro caso, estamos trabajando con realizaciones fonológicas y no ortográficas y, después tenemos dispuesto un mecanismo para hacer una sinéresis cuando no se requiera el hiato.
+
+Tras esto, el método se vale de una lista externa de términos que requieren tratamiento individualizado y la manera en que este ha de hacerse. En la implementación de Python\index{Python}, lo hacemos mediante expresiones regulares\index{expresión regular} (ver \Cref{list:silabeador2}). Emplear una lista como archivo separado tiene la ventaja de que permite añadir o eliminar excepciones rápidamente sin modificar el programa, tan solo editando el fichero que contiene sus descripciones. Veámoslo con un ejemplo real tomado del archivo que empleamos en la versión de Python, en concreto, la parte que se ocupa de los verbos en \textit{-uir}.
+
+%$ [numbers=none, frame=none, keywordstyle=\ttfamily, language=bash]
+\begin{Verbatim}[fontsize=\footnotesize,xleftmargin=5ex]
+	# Infinitivo
+	([^fqg]|\b)ui([ɾr])\b \1u_i\2
+	#Participio                              
+	([^fqg]|\b)uid([oa]s{,1})\b \1u_id\2
+	# Presente
+	([^fqg]|\b)ui(mos|s)\b \1u_i\2
+	# Indefinido
+	([^fqg]|\b)u(i|iste|isteis)\b \1u_\2
+	# Futuro !
+	#([^qg]|\b)ui([rɾ])(é|ás|á|emos|éis|an)\b \1u_i\2\3
+	# Condicional !
+	#([^qg]|\b)ui([rɾ])í(a|as|amos|ais|an)\b u_\1i\2í\3
+\end{Verbatim}
+
+En este fragmento vemos que hay líneas que comienzan con una almohadilla (\#). Estas líneas son ignoradas, por lo que las usaremos para escribir comentarios, como en los que indicamos los tiempos verbales tratados, o para  ignorar reglas, como hacemos en el ejemplo con el condicional y el futuro (\cite[184-186]{quilis2019}, ver \Cref{sec:irregularidades}). En las líneas sin comentar, tenemos dos campos separados por un espacio. En el de la izquierda indicamos la cadena que buscamos mediante expresiones regulares\index{expresión regular} y, en el de la derecha, la sustitución. Los grupos encerrados entre paréntesis se \textit{capturan}, y podemos referenciarlos después durante el reemplazo. Por ejemplo, en el caso del infinitivo que aparece en la primera fila, tenemos la expresión regular \texttt{([\^{}fqg]|\textbackslash b)ui([ɾr])\textbackslash b}, cuyas coincidencias queremos permutar por \texttt{\textbackslash 1u\_i\textbackslash 2}. Esto es, disponemos de la secuencia de o bien un fonema distinto de /f/, /q/ o /g/  (\texttt{[\^{}fqg]} —queremos romper el diptongo en \textit{huimos}, pero no \textit{fuimos} y, en el caso de un texto grafémico, no tendría sentido hacerlo en \textit{seguimos} o \textit{delinquimos}, pues \textlangle{}u\textrangle{} no tiene ahí contrapartida fonológica— o bien el límite de palabra (\texttt{\textbackslash b}), seguido de /ui/ y este de o bien de /ɾ/ o bien \textlangle{}r\textrangle{}\footnote{Dado que la implementación digital del módulo silabeador se ha concebido para poder ser usada también con textos grafémicos, las expresiones regulares de la lista incluyen caracteres correspondientes a fonemas y grafemas indistintamente cuando es posible.} antes del límite de palabra. En la sustitución, indicamos que ha de poner el primer grupo capturado, seguido de \texttt{u\_i} y del segundo grupo. Formalmente, lo expresamos de la siguiente manera:
+
+\[\text{u}, \text{i}, \longrightarrow  \text{u}, \text{\_}, \text{i} \;/\; \_  \left\{  \begin{smallmatrix} {\text{r}}  \\ { \text{ɾ}} \end{smallmatrix} \right\}, \emptyset  \]
+
+En la lista de excepciones incluimos las formas de los verbos en \textit{-iar}, \textit{-uir} y\textit{-uar}, excepto los terminados en\textit{ -cuar} y \textit{-guar}. No hacemos la salvedad de Quilis~\parencite*[185]{quilis2019} para el condicional y el futuro, pues las pruebas empíricas con espectrogramas que hemos realizado no son concluyentes.  También incluimos los adjetivos\index{adjetivo} en \textit{-uoso} y sus derivados, así como las voces individuales y sus flexiones indicadas en \Cref{sec:irregularidades}.
+
+\begin{algorithm}[!ht] %or another one check
+	\caption{Procesamiento de las excepciones.}\label{list:silabeador2}
+	\SetKwFunction{CargarLista}{CargarLista}
+	\SetKwData{palabra}{palabra}
+	\Fmetodo{\HacerExcepciones{palabra}}{
+		\CargarLista{lista}\;
+		\word{i} \gets $lista_i, \forall i \in palabra$
+		\Return{palabra}}
+\end{algorithm}
+
+En la versión de Python, la carga de la lista es un poco más elaborada de lo que mostramos aquí, pues, después de guardar el archivo en una variable, tenemos una larga cadena de texto. Sin embargo, como hemos visto, hay una sola regla por línea, por lo que conviene dividirlo y crear una lista de casos. Por eso, lo siguiente que hacemos es reemplazar cada elemento de la lista por sus dos componentes, excepto si dicha línea está vacía o comienza con un símbolo de almohadilla, en cuyo caso no la incluiríamos. De esta manera, ahora disponemos de una lista de duplas cuyos elementos son ambos miembros de expresión de sustitución. Restaría recorrer la lista e ir aplicando las sustituciones una detrás de otra.
+
+\subsection{Latinismos homógrafos}
+Hemos hallado una circunstancia en el corpus de prueba que no encuentra respuesta en las poéticas y requiere también un tratamiento excepcional. O, mejor dicho, las poéticas \textit{españolas} no dan la respuesta. Se trata de los latinismos intercalados en su ortografía original. Aunque muchas veces pueden analizarse con normalidad para obtener un resultado aceptable, este no es el caso de determinadas declinaciones adjetivo-nominales, algunas de cuyas flexiones, como sabemos, son en -um, -ōrum y, en el de la tercera, también en -em. A esto hay que añadir, en el sistema verbal, las voces pasivas en -ur. Según las reglas de acentuación del español, estas palabras serían agudas, pues no acaban en \textit{n}, \textit{s} o vocal y tampoco llevan tilde, pero vemos que este no es realmente el caso, como demuestra el Ejemplo \ref{ex:um}.
+\begin{exe}
+	\ex\label{ex:um}\begin{xlist}
+		\ex\label{ex:divino1}\textit{et omne factum est ita}\strut\hfill(Calderón, \citetitle[80]{calderon_divinoorfeo})
+		\ex\label{ex:vacante1}\textit{Tantum ergo Sacramentum}.\strut\hfill(\citetitle[1278]{calderon_vacantegeneral})
+		\ex\label{ex:pernaso}\textit{Te Deum laudamus}\strut\hfill(\citetitle[1170, 1192, 1208, 1239]{calderon_pernaso})
+		\ex\label{ex:pernaso2}\textit{Te, Dominum, confitemur}…\hfill(vv. 1171, 1193, 1209, 1240)
+		\ex\label{ex:divino3}\textit{non confundar in eternum}.\hfill(v. 1238)
+		\ex\label{ex:pernaso4}\textit{Adsum}, y pues es decente\hfill(v. 1629)
+	\end{xlist}
+\end{exe}
+
+Lo que planteamos en \Cref{transgraffon} es también válido para esta situación. Podemos usar diccionarios\index{diccionario} o reglas\index{transcripción!por reglas}. En cuanto a los diccionarios\index{transcripción!por diccionario}, es posible incluir en \texttt{exceptions.lst} tantos casos como estimemos, incluyendo la división silábica además de la acentuación. En ese sentido incluimos por defecto las siguientes líneas.
+
+\begin{Verbatim}[fontsize=\footnotesize,xleftmargin=5ex]
+	([aeiouáéíóú])([uea]m|[aie]t|[aeui]nt|ur)\b \1_\2
+	([Dd])o(m).num \1ó\2inum         
+\end{Verbatim}
+
+Con la primera sustitución le indicamos al programa que separe silábicamente el lexema del morfema si aquel termina en vocal y este empieza por otra en palabra potencialmente latina. La segunda, indica que ponga tilde en la antepenúltima sílaba de \textit{Dominum}. Esto presenta una dificultad, y es que  se necesitaría tener en cuenta todos los términos posibles. Por este motivo lo haremos de una forma alternativa.
+
+La solución que planteamos es capturar estas palabras al vuelo, reescribirlas con acentos ortográficos y adaptarlas a la ortografía española conforme a reglas generales\index{transcripción!por reglas} que aligeren la imprescindible corrección manual. De acuerdo con las normas de acentuación latina, la última sílaba es siempre átona sea cual sea su cantidad\index{cantidad}, por lo que las palabras bisilábicas son llanas. Las dificultades surgen en las de tres o más sílabas, pues la posición de la sílaba tónica\index{sílaba!tónica} la determina la cantidad\index{cantidad} de la penúltima, que no siempre conocemos de antemano. Si esta es larga, el acento recae sobre ella. Si, por el contrario, es breve y va precedida de otra sílaba, es la antepenúltima la acentuada, independientemente de su cantidad.
+
+Para hallar si la sílaba decisiva es larga\index{cantidad!larga} o breve\index{cantidad!breve}, debemos recurrir a los patrones que sigue la lengua latina.  De este modo, la cantidad de una sílaba puede deberse a la naturaleza de la vocal nuclear o a su posición. Esto es, la sílaba será larga si se forma en torno a un núcleo largo, que estaría constituido por una vocal larga o por un diptongo; la sílaba puede ser larga también si es cerrada, independientemente de la cantidad de su núcleo \parencite[XI]{stowasser1998}.
+
+Aunque podemos detectar una sílaba larga posicional, no resulta igual de sencillo averiguar la cantidad\index{cantidad} de una vocal interior tan solo con reglas estrictamente grafémicas si esta no va indicada mediante símbolos diacríticos\index{diacrítico}. No obstante, es posible identificar sílabas largas posicionales y los diptongos\index{diptongo}, siendo los siguientes los más habituales:\textit{ae}, \textit{oe}, \textit{au}, \textit{ceu}, \textit{heu}, \textit{seu}, \textit{neuter}, \textit{cui} e \textit{huic} \parencite[28]{ceccarelli1999}. Generalizaremos esto y los dejaremos tentativamente en \textlangle{}æ\textrangle{},  \textlangle{}œ\textrangle{}, \textlangle{}au\textrangle{}, \textlangle{}eu\textrangle{} y \textlangle{}ui\textrangle{}. Así tenemos, resueltos todos los casos salvo aquellos en los que la penúltima vocal es abierta, ya que desconocemos \textit{a priori} su cantidad. Lo que haremos es asumir que la penúltima es larga, salvo que la antepenúltima sea cerrada o su núcleo sea un diptongo, en cuyo caso asumiremos que es breve. Como es de esperar, esta simplificación no produce resultados perfectos, pero reduce el número de excepciones individuales que necesitamos añadir a la lista hasta producir una salida aceptable.
+
+Un último problema que se plantea, cuya resolución es más incierta, es el caso de términos de morfología\index{morfología} homográfica. El ejemplo más claro lo ofrecen las primeras personas de la voz pasiva latina, como \textit{amor}, \textit{amābor}, \textit{amābar}, \textit{amer}, \textit{amārer}. En términos puramente grafémicos, estas formas son indistinguibles de palabras agudas españolas como \textit{amor}, \textit{labor}, \textit{acabar} o \textit{temer}, todas ellas agudas, por lo que no recibirán un tratamiento excepcional sin producir cambios en palabras españolas legítimas. En el ejemplo \ref{ex:pernaso2} tenemos un caso muy claro de la situación. Podríamos resolver mediante diccionario aquellos casos que no tuvieran homógrafo exacto en español, incluyendo también el lexema\index{lexema}, como en el ejemplo de \textit{dominum}, pues no podríamos basarnos completamente en el morfema\index{morfema}. Aun así, hay algunos casos difíciles de abarcar sin provocar errores en palabras españolas, como, por ejemplo, con la palabra \textit{amor}, que está en el repertorio de ambas lenguas pero acentuada en posiciones inversas. Dado que los latinismos son casos excepcionales y, entre estos, aquellas palabras con acentuación contraria a las reglas españolas son una minoría, creemos que es factible el tratamiento manual de aquellos casos no cubiertos si los hay en el corpus. Otros morfemas en vocal o \textit{s} no los automatizamos, pues el ahorro que supondría en la corrección manual sería mínimo. Sin embargo, al igual que los otros casos, también están abiertos a ser tratados individualmente empleando el archivo de excepciones.
+
+\subsection{Latinismos no transliterados}
+Lo que acabamos de exponer lo formalizamos con el método \Latin. Como vemos en \Cref{list:silabeadorlatin}, este método toma un único argumento. En él definimos la lista \texttt{flexiones}, en la que guardamos una lista de morfemas latinos que darían lugar al problema que estamos tratando. Hacemos lo propio con los diccionarios $acentos$ y $diptongos$. En el primero tenemos una tabla de transformación para las vocales. En ella, la clave de cada elemento es una vocal y su valor, la misma vocal acentuada. En el diccionario \texttt{diptongos} tenemos como clave aquellos diptongos latinos no excepcionales que no lo son en castellano, a los que adjudicamos como valor el mismo diptongo en forma monografemática. En el programa de Python, por ejemplo, lo hacemos cambiando lo dos grafemas por el dígrafo\index{dígrafo} con ligatura\index{ligatura}. De esta manera, tenemos la misma información en una sola posición.
+
+Antes de emprender acción alguna, verificamos que la palabra se trata de un caso especial, tal como los que hemos descrito. Si, efectivamente, resulta ser así, seguimos adelante con el proceso; si no, devolveremos la palabra tal cual sin modificaciones. Para esto, comprobamos si la palabra en minúscula termina con alguno de los elementos de la lista $flexiones$ y no tiene marca acentual explícita. Si se cumplen  ambas condiciones, comenzamos los cambios\footnote{En la implementación en Python\index{Python}, como ya dijimos, hay distinción entre mayúsculas y minúsculas, por lo que en este punto pasaríamos la palabra entera a minúsculas para evitarnos hacerlo posteriormente cada vez que necesitáramos hacer una comparación entre dos caracteres en mayúscula y minúscula para la misma letra, aunque aquí resulte irrelevante.}.
+\relax
+\begin{algorithm}[!ht] %LATIN
+	\caption{Procesamiento de latinismos.}\label{list:silabeadorlatin}
+	\Fmetodo{\Latin{palabra}}{
+		\flexiones \gets\ $f: \{-um, -em, -at, -ant, ...\}$ \;
+		\acentos \gets\ $\{(a, \acute{a}), (e, \acute{e}), (i, \acute{\imath}), (o, \acute{o}), (u, \acute{u})\}$\;
+		\dipts \gets\ $\{(ae, \textit{\ae}), (oe, \textit{\oe})\}$\;
+		\If{$palabra \text{ \acabacon }flexiones$}{
+			\If{$(\acute{a} \vee \acute{e} \vee \acute{\imath} \vee \acute{o} \vee \acute{u}) \notin palabra$}{
+				\For{$flexi\acute{o}n \in flexiones$}{
+					\If{palabra \acabacon flexión}{
+						\word{$flexi\acute{o}n$} \gets $\langle\_\rangle + flexi\acute{o}n, \forall flexi\acute{o}n \in palabra$\;
+					}
+				}
+				\word{$diptongo_{c}$} \gets $diptongo_{v}$\;
+				\slbs \gets \Silabea{$palabra$}\;
+				\cuenta \gets $\lvert palabra\rvert$\;
+				\lIf{$n = 1$}{\{Nada\}}
+				\ElseIf{$n = 2$}{
+					\word$_{n-1}${$acentos_{c}$} \gets $acentos_{v}$\;}
+				\ElseIf{$n>2$}{
+					\If{$diptongo_{i} \in s\acute{\imath}labas_{n-2}$}{
+						\slbs$_{n-1}${$acentos_{c}$} \gets $acentos_{v}$\;
+					}
+				}
+				\ElseIf{
+					$diptongos_{i} \in s\acute{\imath}labas_{n-2} \vee$
+					\Vocales{$s\acute{\imath}labas_{n-3}$}$\ge2\ \vee$
+					$\neg s\acute{\imath}labas_{n-3} \text{\acabacon}\: \{vocales\}$
+				}{
+					%	%\hspace*{0.5em}
+					\slbs$_{n-2}${($acentos_{c}$)} \gets $acentos_{v}$\;
+				}
+				\Else{
+					\slbs$_{n-1}${($acentos_{c}$)} \gets $acentos_{v}$\;
+				}
+			}
+		}	
+		\Return{sílabas}
+	}
+\end{algorithm}
+
+Recorremos uno detrás de otro los dos diccionarios que habíamos definido. Primero lo hacemos con $flexiones$ en busca del morfema de la palabra y lo separamos del lexema. En la prueba con el computador, hemos optado por un guion bajo, pues es un elemento poco común en los textos y que, además, refleja ópticamente la idea de lo que pretendemos hacer: deseamos separar con esta marca lexema y morfema, de manera que, si uno de los lados limita con una vocal alta —lo que implicaría un diptongo propio de la fonología española—, podamos indicar la existencia de un hiato facultativo. En el siguiente bucle reemplazamos grupos vocálicos que forman diptongo en latín pero no en español por un carácter equivalente que represente un dígrafo ligado\index{ligatura}. Así, por ejemplo, al grupo vocálico \textlangle{}ae\textrangle{}, que es bisilábico en español, le correspondería \textlangle{}æ\textrangle{}, de manera que lo interpretaríamos después con un núcleo vocálico singular. Una vez hecho esto, dividimos las sílabas normalmente, valiéndonos del método \texttt{Silabear}. De esta manera guardamos en la variable $s\acute{\imath}labas$ una lista de las sílabas de la palabra.
+
+A continuación comprobamos si la palabra es monosilábica, lo que daría una solución trivial. Si este no es el caso, seguimos probando; examinamos si tiene exactamente dos sílabas y, de ser así, aplicamos el acento de forma directa en la segunda, como prescriben las reglas de la prosodia latina. Si tampoco es el caso, verificamos que la palabra reúna las condiciones que la hagan susceptible de las mismas reglas que rigen para una palabra bisilábica. Esto se averigua cotejando la penúltima sílaba por si contiene un diptongo o es una sílaba trabada. Sabemos si el núcleo es un diptongo examinando si alguno de los valores del diccionario $diptongos$ —con las ligaturas— está en la penúltima sílaba o esta contiene más de dos vocales. Si la sílaba es cerrada se dilucida \textit{ad contrarium}, verificando que su última letra no esté entre las claves de $acentos$, que, recordemos, contiene las vocales. Si se cumplen estas premisas, sabemos que la penúltima sílaba es larga y, por lo tanto, va acentuada. En ese caso, se procede a introducir un acento gráfico\index{acento!gráfico} en la sílaba. Se recorren los elementos de $acentos$ por clave y valor, cerciorándose por cada elemento de si su clave se encuentre en la penúltima sílaba. Si es así, se reemplaza en la penúltima sílaba dicha clave por su valor y se interrumpe el bucle tan pronto se lleva a cabo la sustitución.
+
+Si la palabra tiene tres sílabas o más y no se cumplen las condiciones descritas para la segunda sílaba, solo queda intentar adivinar si la antepenúltima sílaba es tónica, pues no conocemos la cantidad\index{cantidad} de la penúltima. En ese caso, se introducen sustituciones específicas en el archivo de excepciones, como las siguientes, que cubren las primeras personas plurales de los futuros de indicativo de la primera y segunda declinación, así como la tercera persona singular del futuro de la voz activa:
+
+\begin{Verbatim}[fontsize=\footnotesize,xleftmargin=5ex]
+	abi([tm])u(rs) ábi\1u\2
+	abi([tm])u(rs) ábi\1u\2
+	ebi([tm])u(rs) ébi\1u\2
+	ebi([tm])u(rs) ébi\1u\2 
+\end{Verbatim}
+
+La única respuesta viable pasa entonces por un diccionario extensivo. En tanto que escapa del propósito de este trabajo, aproximaremos simplemente una solución aceptable, si bien imperfecta\footnote{Aquí vemos las ventajas de la modularidad de nuevo, pues podríamos sustituir en el futuro este método por una biblioteca específica para textos latinos sin tener que alterar el resto del programa.}, a partir de reglas ortográficas generales. Refinaremos aún más el resultado si consideramos que es más probable la alternancia entre sílabas breves\index{cantidad!breve} y largas\index{cantidad!larga} que encontrar dos largas seguidas, por lo que será más plausible asumir que la penúltima es breve si la antepenúltima sílaba es larga y después corregir a mano los fallos.
+
+Volvemos a repetir las comprobaciones que habíamos hecho con la penúltima sílaba, pero examinamos la antepenúltima en esta ocasión. Primero verificamos si alguna de las ligaturas de $diptongos$ se encuentra en esa sílaba o si contiene dos vocales, lo que hallamos recorriendo las claves de $acentos$. Sabremos que es cerrada observando si su última letra no es una clave del diccionario. Acabamos recorriendo $acentos$ por sus elementos y tratando de sustituir cada clave por su valor, para abandonar el bucle en la primera ocasión que lo consigamos.
+
+Si ninguna de las condiciones anteriores se ha cumplido, asignamos el acento a la penúltima sílaba, marcando la primera vocal que encontramos. Ahora sí, devolvemos las sílabas, bien en su estado originario si la palabra lleva acento gráfico o no termina en uno de los morfemas de las flexiones, o una lista de sílabas con las transformaciones indicadas si la palabra cumplía las condiciones para entrar en la bifurcación condicional inicial.
+
+\subsection{Silabación}
+Aquí ya se hallan todas las palabras en igualdad de condiciones, una vez ajustadas aquellas cuya ortografía no se correspondía con la prosodia. Por lo tanto, invocamos el método \texttt{Silabea}, al que le pasamos como parámetro el atributo $palabra$\footnote{En la implementación en Python, necesitaríamos, además, pasarle un parámetro indicando que estamos trabajando con el \ac{afi} y no con una palabra representada con caracteres puramente grafémicos. De esta manera, puede usarse directamente para otros fines aparte de este particular que nos ocupa, bastaría con advertirlo al invocar el método.}.
+
+\begin{algorithm}[!ht] %or another one check
+	\caption{Método silabeador.}\label{list:metodosilabeador}
+	\SetKwFunction{DivideFonemas}{IdentificaNucleos}\SetKwFunction{UneFonemas}{DistribuyeConsonantes}\SetKwData{silabas}{sílabas}\SetKwData{palabra}{palabra}\SetKwData{ajenos}{extraños}
+	\Fmetodo{\Silabea{palabra}}{
+		\silabas \gets\ $\{\}$\;
+		\If{palabra \Fes $cadena$}{
+			\ajenos \gets $\{(\grave{a}, a), (\tilde{o}, o), (\textit{ffi}, ffi), ...\}$\;
+			\word{$ajenos_{c}$} \gets $ajenos_{v}, \forall \ajenos_{c} \in palabra$ \;
+			\silabas \gets\ \DivideFonemas{$palabra$}\;
+			\silabas \gets\ \UneFonemas{$s\acute{\imath}labas$}\;
+		}
+		\Return{sílabas}
+	}
+\end{algorithm}
+
+Para comenzar, definimos  una lista vacía a la que llamaremos $s\acute{\imath}labas$, pues el propósito de este método es organizar las sílabas de la palabra como elementos de una lista. Por esta razón, comprobaremos primero que $palabra$ sea una cadena de caracteres, de modo que, si es ya una lista de sílabas\footnote{Este sería precisamente el caso de una palabra procesada por \texttt{Latín}. Dicha subrutina ya habría realizado el trabajo por encontrarse ya en ese método una llamada a \texttt{Silabea}, de manera que ya estaría silabeado.}, devuelve el atributo que recibe el método tal cual sin alterarlo. Si, en efecto, se trata de una cadena de caracteres y no de una lista de sílabas, emprende ahora sí la división silábica.
+
+Creamos un diccionario del que nos valdremos para limpiar grafemas poco habituales o impropios del español al que denominaremos $extra\tilde{n}os$. Las claves de este diccionario son tanto diacríticos\index{diacrítico} impropios de la lengua castellana (\textit{à} u \textit{õ}, por ejemplo) como ligaturas\index{ligatura} de imprenta que el computador representa como un único carácter y cuyas letras constitutivas necesitamos tratar por separado (por ejemplo, \textit{fi} o \textit{fl}). Aunque las ligaturas son hoy en día escasas, y más en ediciones electrónicas, estas pueden aparecer por diferentes motivos. Esto van desde una elección tipográfica consciente en la edición electrónica, a una digitalización precisa de un texto impreso que las usaba o a una mala digitalización de un texto impreso que carecía de ellas. En cualquier caso, es necesario tenerlas en cuenta para que estos caracteres sean considerados por los grafemas que representan y no como un símbolo distinto. Los valores que adoptan son la transliteración castellana, en el caso de los diacríticos o una secuencia de grafemas en el de las ligaturas. 
+
+Empezaremos a trabajar con la palabra. Recorremos los caracteres que componen la variable $palabra$, que la almacena, para ir sustituyendo las claves del diccionario  $extra\tilde{n}os$ por sus valores, si es que los hallamos.  Esta cadena de caracteres la transformamos en una lista cuyos elementos corresponden a caracteres de $palabra$ y la guardamos en la variable $s\acute{\imath}labas$. Con esto, abordamos la silabación en sí.
+
+Añadimos los elementos a la lista en dos pasos: primero separamos los elementos de $s\acute{\imath}labas$ si nada lo impide por medio el método \texttt{IdentificaNucleos}. Esto es, dividimos todos los elementos salvo aquellos que puedan constituir un diptongo, en cuyo caso son asignados a un único elemento. Luego unimos si es posible los elementos de la lista resultante valiéndonos del método \texttt{DistribuyeConsonantes}, que se encarga de repartir las consonantes en ataque y coda de los núcleos vocálicos. Devolvemos la lista así obtenida, que contiene las sílabas. Queda explicar en detalle los procesos de separación y unión que hemos empleado. 
+
+\subsection{Separación de caracteres}
+Empezaremos por la separación de los núcleos silábicos de la cadena en elementos de una lista mediante el método \texttt{IdentificaNucleos}. Como vemos en \Cref{list:dividefonemas}, se trata de una función recursiva que recibe la cadena de caracteres \texttt{palabra} y la lista \texttt{sílabas}, esta última en principio vacía. La cadena corresponde a la palabra que queremos procesar y la lista se va rellenando con sílabas tentativas, con las vocales unidas en caso de diptongo, que finalmente devolveremos.
+
+
+\begin{algorithm}[!ht] %or another one check
+	\caption{Separación de núcleos silábicos.}\label{list:dividefonemas}
+	\Fmetodo{\DivideFonemas{palabra, silabas}}{
+		\dipt \gets\ \EncuentraDiptongo{$palabra$}\;
+		\dígrafos \gets\ $\{ll, ch, rr\}$\;
+		\If{diptongo}{
+			\slbs \gets\  \DivideFonemas{$palabra - diptongo_{i}, \{diptongo_{i}\} + s\acute{\imath}labas$} \;
+		}
+		\ElseIf{palabra \acabacon $dígrafos$}{
+			\slbs \gets\ \DivideFonemas{$palabra_{1:n-2}, \{palabra_{n-1}, palabra_{n}\} + s\acute{\imath}labas$} \;
+		}
+		\ElseIf{palabra}{
+			\slbs \gets\ \DivideFonemas{$palabra_{1:n-1}, \{palabra_{n}\} + s\acute{\imath}labas$} \;
+		}
+		\Return{sílabas}
+	}
+\end{algorithm}
+
+Primero buscamos si la cadena de caracteres acaba con un diptongo o un triptongo\index{triptongo} según las reglas de formación vistas en \Cref{sec:diptongo}\footnote{En la implementación en Python\index{Python}, hacemos esto valiéndonos de expresiones regulares\index{expresión regular}.}. El resultado de la búsqueda lo almacenamos en la variable $diptongo$. Por conveniencia, creamos una lista de dígrafos ortográficos del español. El último no es relevante en nuestro caso porque estaríamos ya trabajando con los equivalentes de su transcripción fonológica. Sin embargo, permitiría usar el módulo de forma independiente en otros contextos que requirieran trabajar con textos tal cual sin transcribir.
+
+Después entramos en una división condicional. Primero comprobamos si hemos encontrado una agrupación vocálica a final de palabra verificando que la variable $diptongo$ no es nula. De contener un valor, invocamos recursivamente la propia función \texttt{IdentificaNucleos}, pero, ahora, la llamaremos pasándole como  argumentos la cadena de caracteres sin la unión vocálica final y la lista $s\acute{\imath}labas$ con dicha fusión insertada en la primera posición. Guardamos lo devuelto en  $s\acute{\imath}labas$.
+
+Si la palabra acaba en un dígrafo, guardamos en  $s\acute{\imath}labas$ la salida de una nueva llamada a la propia función con la cadena de caracteres sin el dígrafo y este como un nuevo elemento al final de la lista. En cualquier otro caso, guardamos en  $s\acute{\imath}labas$ el resultado de la llamada recursiva a \texttt{IdentificaNucleos} con la cadena sin su último carácter y la lista  $s\acute{\imath}labas$ con este en primera posición.
+
+En el siguiente ejemplo vemos el funcionamiento de una llamada concreta al método \texttt{IdentificaNucleos(\textit{'Sigüenza'})}\footnote{Ciudad mitrada castellana de monumental legado arquitectónico, histórico y cultural; ha presentado su candidatura a Patrimonio Mundial.}. Primero tomaría la \textit{a} y guardaría en  $s\acute{\imath}labas$ el resultado de \texttt{IdentificaNucleos(\textit{'Sigüenz'}, \textit{\{'a'\}})}. Este, a su vez, sería el resultado de \texttt{IdentificaNucleos(\textit{'Sigüen'}, \textit{\{'z', 'a'\}})}, y así sucesivamente hasta que la llamada más profunda de la recursión se encontrara con una cadena de caracteres nula, por lo que procedería a devolver la lista, que iría pasando de un nivel de la recursión al precedente hasta alcanzar la llamada inicial.
+ 
+\begin{Verbatim}[fontsize=\footnotesize,xleftmargin=5ex]
+	0: word: []                                      letters: Sigüenza
+	1: word: ['a']                                   letters: Sigüenz
+	2: word: ['z', 'a']                              letters: Sigüen
+	3: word: ['n', 'z', 'a']                         letters: Sigüe
+	4: word: ['üe', 'n', 'z', 'a']                   letters: Sig
+	5: word: ['g', 'üe', 'n', 'z', 'a']              letters: Si
+	6: word: ['i', 'g', 'üe', 'n', 'z', 'a']         letters: S
+	8: word: ['S', 'i', 'g', 'üe', 'n', 'z', 'a']    letters:
+\end{Verbatim}
+
+\subsection{Unión de caracteres}
+El método \texttt{DistribuyeConsonantes}  (\Cref{list:unefonemas}) recibe una lista de agrupaciones fonémicas por medio del argumento  $palabra$. Los núcleos silábicos se encuentran ya ordenados en monofonemáticos, diptongos\index{diptongo} y triptongos\index{triptongo}. La subrutina empieza por definir dos listas. La primera es $ataqueIndivisible$, que está compuesto por agrupaciones consonánticas en ataque silábico del tipo \textit{mutae cum liquidis}, según lo visto en \Cref{sec:silabas}, dígrafos y el grupo \textipa{/gw/}.  La segunda lista es $codaIndivisible$ que, como su propio nombre indica, se compone de agrupaciones consonánticas indivisibles en coda si preceden a otra consonante.
+
+Se define la variable $s\acute{\imath}labas$, que es el valor a devolver. En esta variable se irán guardando los núcleos silábicos y las agrupaciones consonánticas que les corresponden; se inicializa como una lista vacía. También se crea una variable auxiliar $resto$, donde se van poniendo temporalmente las consonantes que aún queden por asignar a un núcleo silábico; esta se inicializa como una cadena de caracteres vacía\footnote{En la implementación en Python, además, para completar los pasos previos hay que verificar si el texto es una transcripción fonológica o es grafémico, en cuyo caso el programa considerará los caracteres \textlangle{}j\textrangle{} y \textlangle{}w\textrangle{} como grafemas consonánticos. En esta descripción en pseudocódigo, no lo haremos, sino que los tomaremos como alófonos de /i/ y /u/.}. Con esto, ya está todo lo necesario para empezar a iterar por los elementos de $palabra$.
+
+\begin{algorithm}[!ht] %or another one check
+	\caption{Distribución silábica de consonantes.}\label{list:unefonemas}
+	\SetKwData{silabas}{sílabas}\SetKwData{codaIndivisible}{codaIndivisible}
+	\SetKwData{ataqueIndivisible}{ataqueIndivisible}\SetKwData{resto}{resto}
+	\SetKwData{ataqueAdmisible}{ataqueAdmisible}
+	\Fmetodo{\UneFonemas{palabra, silabas}}{
+		\ataqueAdmisible \gets\ $f:\{ataques\: admisibles\}$\;
+		\ataqueIndivisible \gets\ $\{pl, fl, ...\}$\;
+		\codaIndivisible \gets\ $\{ns, bs, ...\}$\;
+		\silabas \gets\  $\{\}$\;
+		\For{$posici\acute{o}n_{i}\:\in\:palabra$}{
+			\tcc{Bloque de comprobaciones (\Cref{list:unefonemascomprobaciones})}	
+		}
+		\tcc{Asignación final del resto (\Cref{list:unefonemasresto})}
+		\Return{sílabas}
+	}
+\end{algorithm}
+
+Ya dentro del bucle que hemos iniciado, establecemos una serie de bifurcaciones condicionales (\Cref{list:unefonemascomprobaciones}). Como primera comprobación, miramos si el carácter examinado es el escogido para señalar los hiatos facultativos. Si este es el caso, solo actuaremos si la lista de sílabas contiene al menos un elemento; de lo contrario, se trata del comienzo de la palabra, por lo que no haremos nada y, simplemente, pasaremos a la siguiente iteración. Supongamos que no es este el caso; entonces, nos encontramos ante una división silábica forzada manualmente, por lo que añadiremos el contenido de $resto$ en coda a la última sílaba de la cadena y reiniciaremos la variable.
+
+\begin{algorithm}[!ht] %or another one check
+	\caption{Bloque de comprobaciones.}\label{list:unefonemascomprobaciones}
+	\valor \gets\ $\lvert s\acute{\imath}labas\rvert$\;
+	\If{$posici\acute{o}n_{i} = \langle\_\rangle$}{
+		\If{$n > 0$}{
+			\slbs$_{n}$ \gets\ $resto$ \;
+			\resto \gets\ $\emptyset$\;
+		}
+	}
+	\ElseIf{$\nexists x \in vocales , \forall x \in posici\acute{o}n_{i}$}{ %
+		\eIf{resto \acabacon $\langle y\rangle$}{
+			\eIf{$resto = \langle i \rangle \wedge posici\acute{o}n_{i-1} \in \{a, e, o\}$}{
+				\slbs$_{n}$ \gets\ $silabas_{n} + resto$\;
+			}{
+				\slbs \gets\ $s\acute{\imath}labas + \{resto\}$\;
+			}
+			\resto \gets\ $posici\acute{o}n_{i}$\;
+		}{
+			\resto \gets\ $resto + posici\acute{o}n_{i}$ \;
+			\lIf{$n = 0$}{\media \gets\ $\lvert resto\rvert \bmod 2$}
+			\lIf{$resto \text{\acabacon}\:\langle h\rangle$}{\media \gets\ $0$}
+		}
+	}
+	\ElseIf{$\lvert resto\rvert \leq 1 \vee n = 0$}{
+		\slbs \gets $s\acute{\imath}labas + \{resto + posici\acute{o}n_{i}\}$\;
+	}
+	\ElseIf{$resto\:\text{\acabacon}\:ataqueIndivisible$}{
+		\eIf{$n > 0$}{
+			\slbs$_{n}$\gets\ $s\acute{\imath}labas_{n} + resto_{n-1:n}$\;
+			\slbs \gets\ $s\acute{\imath}labas + \{resto_{n-1:n} + posici\acute{o}n_{i}\}$\;
+		}{
+			\slbs \gets\ $posici\acute{o}n_{i} + \{resto + posici\acute{o}n_{i}\}$ \;
+		}
+		\resto \gets\  $\emptyset$ 
+	}
+	\ElseIf{$resto\:\text{\empiezacon}\:codaIndivisible \wedge \dim{resto}\ >2$}{
+		\slbs$_{n}$\gets \ $s\acute{\imath}labas + resto_{1:n-2}$\;
+		\slbs \gets \ $s\acute{\imath}labas + \{resto_{3:n} + posici\acute{o}n_{i}\}$\;
+		\resto \gets \ $\emptyset$\;
+	}
+	\ElseIf{$resto_{n-1} + resto_{n} \notin ataquesAdmisibles$}{
+		\slbs$_{n}$ \gets $s\acute{\imath}labas_{n} + resto_{1:n-1}$\;
+		\slbs \gets\ $s\acute{\imath}labas + \{resto_{n}+posici\acute{o}n_{i}\}$\;
+		\resto \gets\ $\emptyset$\;
+	}
+	\Else{
+		\slbs$_{n}$ \gets \ $s\acute{\imath}labas_{n} + \{resto_{1:med-1}\}$\;
+		\slbs \gets\ $s\acute{\imath}labas + \{resto_{med:n} + posici\acute{o}n_{i}\}$\;
+		\resto \gets\ $\emptyset$\;
+	}	
+\end{algorithm}
+
+Si no encontramos un hiato introducido de forma manual, pasamos a la siguiente prueba. Entramos en el bloque de instrucciones si el elemento de $grupo$ que examinamos en esta iteración contiene exclusivamente consonantes. Si es así, vemos si acaba con \textit{y} —lo que, de nuevo, se emplearía únicamente en contextos en los que la cadena de entrada es grafémica y no fonológica—, lo que llevaría a un tratamiento especial. De ser cierto, comprobamos si, además, la variable $resto$ está constituida solo por \textit{y}, esto es, si no va precedida de consonante. Si se cumple esa condición, asignamos la \textit{y} a la sílaba anterior si acaba en vocal, pues estaremos ante una cadena \textsc{V}-\textit{y}-\textsc{C}. Si no, asignamos la \textit{y} a una sílaba nueva de $s\acute{\imath}labas$, ya que estaríamos ante \textsc{C}-\textit{y}-\textsc{C}. Finalmente sobrescribiríamos $resto$ con el valor del grupo que estamos observando.
+
+Si la consonante final no es \textit{y}, se la añadimos a $resto$. Guardamos en la variable $media$ la posición donde queremos dividir $resto$ en caso de que haya que repartirlo entre dos sílabas. Asimismo, introducimos aquí la excepción para evitar que la hache intercalada vaya en ataque después de consonante.
+
+Si ninguna de las dos condiciones anteriores se cumple, probamos a ver si lo hace la siguiente. Examinamos $resto$ para ver si contiene como máximo una consonante o si la variable $s\acute{\imath}labas$ está vacía. Esto  es, nos encontramos ante un núcleo vocálico, ya que no se ha cumplido que sea la marca de hiato o consonante. De la misma manera, resulta que, o bien tenemos una o ninguna consonante sin asignar, o bien estamos ante la primera agrupación vocálica de la palabra. En tal caso, añadimos un nuevo elemento a $s\acute{\imath}labas$, puesto que tenemos un núcleo vocálico. Este estaría formado, además, por $resto$ en ataque. Una vez asignado esta variable, la vaciamos de su contenido antes de la siguiente iteración.
+
+Si tampoco esta se cumple, estamos ante un núcleo vocálico que no es el de la primera sílaba. Así pues, cotejamos las últimas consonantes de  $resto$ con la lista de ataques indivisibles. De ser uno de ellos y ya tenemos un núcleo vocálico en  $s\acute{\imath}labas$, dividimos $resto$ en dos: el grupo consonántico indivisible del final y las demás consonantes. El comienzo se lo añadimos en coda al último elemento de $s\acute{\imath}labas$ y el grupo indivisible lo pondríamos en un nuevo elemento como coda del vocálico que estamos examinando. Nótese que si $resto$ lo componen dos consonantes, por ejemplo, $resto = \{\textipa{p}, \text{\textipa{R}}\}$ la división se seguiría haciendo, pero, en este caso los grupos serían $resto_{1} = \{\}$, que iría en coda de la sílaba anterior y  $resto_{2} = \{\textipa{p}, \text{\textipa{R}}\}$, en ataque de la nueva sílaba. Finalmente, vaciamos la variable auxiliar una vez distribuidos sus componentes.
+
+Si el caso anterior tampoco se cumple, verificamos si $resto$ comienza por alguna de las consonantes que componen una coda indivisible. De ser cierto, hacemos un proceso parecido al precedente; dividimos la variable auxiliar en dos partes: por un lado, las dos primeras letras y, por otro, las demás si las hay. El primer grupo se lo asignamos al último núcleo vocálico en coda, mientras que el segundo irá en una nueva sílaba en ataque de la vocal o agrupación vocálica que estamos examinando. Como en las ocasiones anteriores, una vez distribuidas las consonantes, reinicializamos la variable auxiliar.
+
+Si los casos anteriores no se cumplen, examinamos las dos últimas letras de $resto$ para ver si forman un par inaceptable en ataque silábico y, por lo tanto, susceptible de división. Comprobamos si tenemos una consonante de /d/, /f/, /k/ o /t/ (\textit{ánfora}); /θtk/ seguido de /g/ (\textit{pazguato}), ; dos veces /l/ o /m/ (\textit{colmena}); o /k/ ante /θ/ (\textit{acción}). Nótese que el dígrafo \textlangle{}ll\textrangle{}, por ejemplo, aunque satisface los criterios de esta bifurcación condicional, no podría entrar en ella nunca porque lo habría hecho antes en la prueba en que se comprueba si $resto$ acaba en un ataque indivisible. En caso de que el algoritmo entre en esta condición, añade todas las letras de $resto$, salvo la última, al elemento final de  $s\acute{\imath}labas$ y después introduce una nueva sílaba compuesta por la última letra de $resto$ y el elemento vocálico que estamos examinando para, finalmente —como ya sabemos—, borrar el contenido de la variable una vez repartidos sus componentes.
+
+En cualquier otro caso, concatenamos a la última sílaba de $s\acute{\imath}labas$ las consonantes de  $resto$ hasta la posición $media$ e introducimos una nueva sílaba compuesta por las letras de  $resto$ desde la posición indicada por $media$ hasta el final en ataque de la vocal que estamos examinando. También en este caso, borramos el contenido de  $resto$ una vez usado.
+
+\begin{algorithm}[!ht] %or another one check
+	\caption{Asignación final del resto.}\label{list:unefonemasresto}
+	\If{resto}{
+		\If{resto \acabacon $\:\langle y\rangle \wedge\: \lvert resto\rvert\:= 1$}{
+			\slbs$_{n}$ \gets\ $resto$\;
+		}
+		\ElseIf{resto \acabacon $\:\langle y\rangle$}{
+			\slbs$_{n}$ \gets\ $resto_{1:n-2}$\;
+			\slbs \gets\ $s\acute{\imath}labas + \{resto_{n-1:n}\}$\;
+		}
+		\Else{
+			\slbs$_{n}$ \gets\ $s\acute{\imath}labas_{n} + resto$\;
+		}
+	}
+\end{algorithm}
+
+Para terminar, una vez ha terminado el bucle al llegar a la última letra, comprobamos si han quedado consonantes en  $resto$, en cuyo caso debemos añadírselas a la sílaba final, salvo que se trate de una \textit{y} en un texto grafémico, que podría diptongar con la anterior o hacer de núcleo silábico. Esto lo hacemos observando el tamaño de  $resto$ si este acaba en \textit{y}, de forma que, si contiene un único elemento, sabemos que no hay consonantes intercaladas entre la última vocal y esta, por lo que añadiremos todo el contenido de  $resto$ a la última sílaba. Si hay más de un elemento en  $resto$, sabemos que \textit{y} va precedida de consonantes, por lo que la añadiremos los dos últimos elementos de  $resto$ como última sílaba de $s\acute{\imath}labas$ y todos aquellos elementos anteriores como coda de la sílaba precedente. En cualquier otro caso, añadimos las consonantes remanentes como coda a la última sílaba y retornamos la lista de sílabas procesada $s\acute{\imath}labas$. Si retomamos el ejemplo anterior, al pasar por \texttt{DistribuyeConsonantes}, los resultados intermedios que se irían produciendo serían los siguientes.
+
+\begin{Verbatim}[fontsize=\footnotesize,xleftmargin=5ex]
+0: word: []                      letter:       onset:   	media: 0
+1: word: []                      letter: S     onset: S 	media: 0
+2: word: ['Si']                  letter: i     onset:   	media: 0
+3: word: ['Si']                  letter: g     onset: g 	media: 0
+4: word: ['Si', 'güe']           letter: üe    onset:   	media: 0
+5: word: ['Si', 'güe']           letter: n     onset: n 	media: 0
+6: word: ['Si', 'güe']           letter: z     onset: nz	media: 1
+7: word: ['Si', 'güen', 'za']    letter: a     onset:   	media: 0
+\end{Verbatim}
+
+\subsection{Ubicación del acento prosódico}
+A continuación definimos la función de encontrar la sílaba tónica en la palabra, a la que llamaremos \texttt{EncuentraTónica}. El único argumento que recibe es una lista de sílabas como la que hemos obtenido mediante los algoritmos descritos en las secciones anteriores. Emplearemos para ello las reglas de la ortografía española vistas en \Cref{sec:acento}. Primero examinamos el número de sílabas. Si es un monosílabo, la solución es trivial. Si este no es el caso, comprobamos si hay alguna marca gráfica de acentuación en la palabra. Aquí hemos indicado las tildes ortográficas por claridad, pero habría que considerar también las marcas de acento primario y secundario de las transcripciones. Si este es el caso, recorremos las sílabas hasta que la encontramos; la posición de la sílaba marcada, que será la que lleve  el acento prosódico. 
+
+Podría ser que la palabra no tuviera marcas explícitas, por lo que veríamos si acaba en vocal y, de ser así, identificaríamos el acento prosódico en la penúltima sílaba. Si no acabara en vocal, observaríamos si acaba en \textlangle{}n\textrangle{}, \textlangle{}s\textrangle{} ante vocal y, si se cumple, también asignaríamos el acento prosódico a la penúltima sílaba. En cualquier otro caso, la palabra sería aguda. Al salir de las bifurcaciones, la posición del acento prosódico está en $acento$, que devolvemos como salida de la función.
+
+\begin{algorithm}[!ht] %or another one check
+	\caption{Localizador de acento prosódico.}\label{list:encuentracento}
+	\Fmetodo{\EncuentraTonica{silabas}}{
+		\cuenta \gets\ $\lvert s\acute{\imath}labas\rvert$\;
+		\lIf{$n = 1$}{\acento \gets\ $n$}
+		\ElseIf{$\exists x \in s\acute{\imath}labas_{i} \forall x \in \{\acute{a}, \acute{e}, \acute{\imath}, \acute{o}, \acute{u}\}$}{
+			\acento \gets\ $i$}
+		\ElseIf{$s\acute{\imath}labas_{n}\:\text{\acabacon}\: \{a,e,i,o,u, y\}$}{\acento \gets\ $n-1$}
+		\ElseIf{$s\acute{\imath}labas_{n}\:\text{\acabacon}\: \{n, s\}$}{\acento \gets\ $n-1$}
+		\Else{\acento \gets\ $n$}
+		\Return{acento}	
+	}
+\end{algorithm}
+
+
+\subsection{Verificación de la precisión del silabeador}\label{sec:silpres}
+Para verificar la precisión del silabeador, probamos su implementación en Python\index{Python} con el corpus de palabras predefinida EDFU \parencite{rosa2020a}, que consta de 106{.}362 palabras y ya ha sido empleado como \textit{gold standard} para estimar la precisión de la división silábica automática orientada a la escansión de versos.
+
+Nuestro modelo obtiene una exactitud del 99{,}81~\%, por encima del 98{,}06~\% de \citeauthor{agirrezabal2017}~\parencite*{agirrezabal2017}, el 98{,}35~\% de Navarro-Colorado \parencite*{navarrocolorado2015}, únicamente por detrás del 99{,}99~\% de Rantanplan \parencite{rosa2020b}. Este porcentaje responde diferentes agrupaciones en la distribución de grupos consonánticos de acuerdo con variedades regionales, como, por ejemplo, el grupo \textlangle{}tl\textrangle{}, que en el corpus (350 entradas) se divide según la pronunciación americana \textit{a·tlán·ti·co} y nuestro silabeador emplea la castellana \textit{at·lán·ti·co}. Asimismo, hemos detectado en el corpus triptongos\index{triptongo} impropios, ya que no son combinaciones de un diptongo creciente y otro decreciente, por lo que encontramos palabras del tipo \textins{amambaiense} divididas como \textit{a·mam·baien·se} en lugar de \textit{a·mam·ba·ien·se}. El corpus adjudica una sílaba a las eses líquidas, mientras que nuestro silabeador no lo hace, ya que añade la sílaba epentética durante la transcripción. Descontando divisiones alternativas correctas, errores del corpus y eses epentéticas correctas por todo lo demás, se alcanzaría una precisión del 99{,}98~\%.
+
+No obstante, esta puntuación se obtiene usando la configuración por defecto, a saber, con el argumento \texttt{exceptions} puesto a \texttt{False}. Para la escansión métrica se pondrá a \texttt{True}, de modo que se hagan hiatos no explícitos. En este caso, la precisión respecto al corpus de palabras sería de 90{,}06~\% incluyendo errores del corpus, siendo el 0{,}86~\% de diferencia los hiatos no indicados implícitamente. Esto es, el corpus divide \textins{huida}  como \texttt{hui-da}, mientras que nuestro silabeador lo haría como \texttt{hu-i-da} si tenemos activadas las excepciones.
+
+Para las pruebas de escansión automática de verso fijo, se aprecian diferencias distinguibles ente el uso de la división silábica peninsular  (precisión del 97{,}51~\%) o la americana (97{,}08~\%), por lo que optamos, tanto por ser el uso lingüístico del autor como por la disponibilidad de informantes hablantes de esta variedad, por procesar usando las excepciones castellanas y luego tratar de hacer una sinéresis donde sea necesario en lugar del procedimiento contrario, abordar todas las palabras como regulares y dividirlas con diptongo\index{diptongo} e introducir una diéresis\index{diéresis} para ajustar el verso.

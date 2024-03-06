@@ -1,0 +1,43 @@
+\pgfplotstableread{ % data 
+	Personaje   H A S
+	\textsc{Rosaura} 30 55 19
+	\textsc{Clarín} 14 71 11
+	\textsc{Segismundo} 8 16 11
+	\textsc{Clotaldo} 26 28 10
+	\textsc{Soldados} 3 46 10
+	\textsc{Astolfo} 13 11 19
+	\textsc{Estrella} 11 13 11
+	\textsc{Damas} 2 22 11
+	\textsc{Basilio} 6 22 3
+	\textsc{Acompañamiento} 2 17 3
+}\testdata 
+
+
+\begin{tikzpicture}
+	\begin{axis}[
+		xbar,	
+		y dir=reverse,
+		reverse legend,
+		y axis line style = { opacity = 0 },
+		axis x line       = none,
+		height=0.6\textheight,
+		width=0.8\textwidth,
+		tickwidth         = 0pt,
+		enlarge y limits=0.2,
+		enlarge x limits=0.01,
+		legend style={at={(0.9,0.143)},anchor=east, draw=none},
+		%symbolic y coords = {Personaje~4,Personaje~2,Personaje~1},
+		ytick             = data,
+		yticklabels from table={\testdata}{Personaje},
+		every node near coord/.append style={
+			anchor=west,
+			font=\small,
+			/pgf/number format/sci,
+			/pgf/number format/precision=2,
+		},
+		]
+		\addplot [point meta=explicit symbolic, fill=black!55, nodes near coords] table [x=H, meta=H,y expr=\coordindex] {\testdata};
+		\addplot [point meta=explicit symbolic,fill=black!27, nodes near coords] table [x=A,y expr=\coordindex,meta=A] {\testdata};
+		\legend{Parlamento propio, Parlamento ajeno}
+	\end{axis}
+\end{tikzpicture}
