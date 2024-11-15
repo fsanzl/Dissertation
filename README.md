@@ -33,14 +33,14 @@ The PhD thesis composed with this source code was defended at the [Department of
   author = {Sanz-Lázaro, Fernando},
   title = {Ritmo y estructura de la comedia áurea: posibilidades y límites del análisis digital automático del teatro español clásico},
   school = {Universität Wien},
-  date = {2024},
+  date = {2023},
   doi = {10.25365/THESIS.75102},
   url = {https://hdl.handle.net/11353/10.1678196}, 
   language = {es},
   langid = {Spanish},
-  year = {2024}
+  year = {2023}
 }
 ```
 ### APA
 
-Sanz-Lázaro, F. (2024). *Ritmo y estructura de la comedia áurea: posibilidades y límites del análisis digital automático del teatro español clásico* [Doctoral dissertation, University of Vienna]. PHAIDRA. <https://hdl.handle.net/11353/10.1678196>
+Sanz-Lázaro, F. (2023). *Ritmo y estructura de la comedia áurea: posibilidades y límites del análisis digital automático del teatro español clásico* [Doctoral dissertation, University of Vienna]. PHAIDRA. <https://hdl.handle.net/11353/10.1678196>
